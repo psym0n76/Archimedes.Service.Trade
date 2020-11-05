@@ -30,6 +30,8 @@ namespace Archimedes.Service.Trade
             services.AddSingleton(Configuration);
             var config = Configuration.GetSection("AppSettings").Get<Config>();
 
+            services.AddLogging();
+
             services.AddControllers();
         }
 
