@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Archimedes.Library.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -25,6 +26,10 @@ namespace Archimedes.Service.Trade
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<Config>(Configuration.GetSection("AppSettings"));
+            services.AddSingleton(Configuration);
+            var config = Configuration.GetSection("AppSettings").Get<Config>();
+
             services.AddControllers();
         }
 
