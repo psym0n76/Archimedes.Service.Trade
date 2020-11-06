@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using Archimedes.Library.Message;
 using Archimedes.Library.RabbitMq;
+using Archimedes.Service.Trade;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -11,6 +13,7 @@ namespace Archimedes.Service.Price
     {
         private readonly ILogger<PriceSubscriber> _logger;
         private readonly IPriceConsumer _consumer;
+        public event EventHandler<PriceEventArgs> HandleMessage;
 
         public PriceSubscriber(ILogger<PriceSubscriber> log, IPriceConsumer consumer)
         {
@@ -36,6 +39,7 @@ namespace Archimedes.Service.Price
             try
             {
                 var message = JsonConvert.DeserializeObject<PriceMessage>(args.Message);
+                HandleMessage?.Invoke(null,new PriceEventArgs(){Price = 12});
             }
 
             catch (JsonException j)

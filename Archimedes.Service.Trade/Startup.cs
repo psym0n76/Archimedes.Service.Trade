@@ -1,5 +1,6 @@
 using Archimedes.Library.Domain;
 using Archimedes.Library.RabbitMq;
+using Archimedes.Service.Price;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -25,8 +26,13 @@ namespace Archimedes.Service.Trade
             services.AddSingleton(Configuration);
             var config = Configuration.GetSection("AppSettings").Get<Config>();
 
-            services.AddTransient<IPriceConsumer>(x => new PriceConsumer(config.RabbitHost, config.RabbitPort, "Archimedes_Price",""));
+            services.AddTransient<IPriceConsumer>(x =>
+                new PriceFanoutConsumer(config.RabbitHost, config.RabbitPort, "Archimedes_Price"));
 
+            services.AddTransient<IValueTrade, ValueTrade>();
+
+            services.AddTransient<IPriceSubscriber, PriceSubscriber>();
+            services.AddHostedService<PriceSubscriberService>();
             services.AddLogging();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
