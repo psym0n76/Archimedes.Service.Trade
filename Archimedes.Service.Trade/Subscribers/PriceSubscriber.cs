@@ -34,7 +34,7 @@ namespace Archimedes.Service.Price
 
         private void UpdateTrades(MessageHandlerEventArgs args)
         {
-            _logger.LogInformation($"Received from PriceExchange Message: {args.Message}");
+            //_logger.LogInformation($"Received from PriceExchange Message: {args.Message}");
 
             try
             {
