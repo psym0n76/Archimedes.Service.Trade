@@ -2,15 +2,16 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Archimedes.Library.RabbitMq;
+using Archimedes.Service.Trade;
 
 namespace Archimedes.Service.Price
 {
-    public class PriceSubscriber : IPriceSubscriber
+    public class PriceLevelSubscriber : IPriceLevelSubscriber
     {
-        public event EventHandler<MessageHandlerEventArgs> PriceMessageEventHandler; 
+        public event EventHandler<MessageHandlerEventArgs> PriceLevelMessageEventHandler; 
         private readonly IPriceConsumer _consumer;
 
-        public PriceSubscriber(IPriceConsumer consumer)
+        public PriceLevelSubscriber(IPriceConsumer consumer)
         {
             _consumer = consumer;
             _consumer.HandleMessage += Consumer_HandleMessage;
@@ -18,7 +19,7 @@ namespace Archimedes.Service.Price
 
         private void Consumer_HandleMessage(object sender, MessageHandlerEventArgs args)
         {
-            PriceMessageEventHandler?.Invoke(this, args);
+            PriceLevelMessageEventHandler?.Invoke(this, args);
         }
 
         public Task Consume(CancellationToken cancellationToken)
