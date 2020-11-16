@@ -1,5 +1,6 @@
 using Archimedes.Library.Domain;
 using Archimedes.Library.RabbitMq;
+using Archimedes.Service.Price;
 using Archimedes.Service.Trade.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -35,6 +36,10 @@ namespace Archimedes.Service.Trade
 
             services.AddTransient<ICandleConsumer>(x =>
                 new CandleConsumer(config.RabbitHost, config.RabbitPort, config.RabbitExchange,"Candle_Producer"));
+
+            services.AddTransient<IPriceSubscriber, PriceSubscriber>();
+            services.AddTransient<IPriceLevelSubscriber, PriceLevelSubscriber>();
+            services.AddTransient<ICandleSubscriber, CandleSubscriber>();
 
             services.AddAutoMapper(typeof(Startup));
             services.AddLogging();

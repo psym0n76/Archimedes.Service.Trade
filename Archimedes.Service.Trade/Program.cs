@@ -40,13 +40,13 @@ namespace Archimedes.Service.Trade
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    webBuilder.CaptureStartupErrors(false);
+                    webBuilder.CaptureStartupErrors(true);
                 }).UseNLog()
                 .ConfigureServices(services =>
                 {
                     services.AddHostedService<PriceSubscriberService>();
                     services.AddHostedService<CandleSubscriberService>();
                     services.AddHostedService<PriceLevelSubscriberService>();
-                }); // this ensures we have logging;
+                });
     }
 }
