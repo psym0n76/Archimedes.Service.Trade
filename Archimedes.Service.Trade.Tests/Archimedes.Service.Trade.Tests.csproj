@@ -9,6 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="GBPUSD_0Min_20201116_0900-1930.json" />
+    <None Remove="GBPUSD_15Min_20201101_PIVOT7.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="GBPUSD_0Min_20201116_0900-1930.json" />
+    <EmbeddedResource Include="GBPUSD_15Min_20201101_PIVOT7.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Archimedes.Library" Version="1.0.239" />
     <PackageReference Include="Moq" Version="4.15.1" />
     <PackageReference Include="nunit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />

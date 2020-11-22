@@ -14,6 +14,8 @@ namespace Archimedes.Service.Trade.Http
 
         Task<List<PriceDto>> GetPricesByMarketByFromDate(string market, string granularity, DateTime fromDate);
 
+        Task UpdatePriceLevel(PriceLevelDto priceLevel);
+
         Task AddTrade(TradeDto trade);
     }
 }

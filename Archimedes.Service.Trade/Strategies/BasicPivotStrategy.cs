@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Archimedes.Library.Message.Dto;
 using Archimedes.Library.RabbitMq;
 using Archimedes.Service.Trade;
-using Archimedes.Service.Trade.Http;
-using AutoMapper;
+using Archimedes.Service.Trade.Strategies;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Phema.Caching;
 
 namespace Archimedes.Service.Price
 {
@@ -18,8 +15,8 @@ namespace Archimedes.Service.Price
         private decimal _lastBidPrice = 0m;
         private decimal _lastAskPrice = 0m;
 
-        private readonly IHttpRepositoryClient _httpRepository;
         private readonly ILogger<BasicPivotStrategy> _logger;
+
         private readonly IPriceSubscriber _priceSubscriber;
         private readonly IPriceLevelSubscriber _priceLevelSubscriber;
         private readonly ICandleSubscriber _candleSubscriber;
@@ -28,25 +25,34 @@ namespace Archimedes.Service.Price
         private readonly List<CandleDto> _candles = new List<CandleDto>();
         private readonly List<Transaction> _transactions = new List<Transaction>();
 
-        private const string Market = "GBP/USD";
-        private const string Granularity = "15Min";
-        private readonly IMapper _mapper;
+        private readonly ITradeExecutorPrice _tradeExecutorPrice;
 
-        public BasicPivotStrategy(ILogger<BasicPivotStrategy> log, IHttpRepositoryClient httpRepository, IMapper mapper,
+        private readonly IDistributedCache<List<PriceLevel>> _cache;
+        private const string CacheName = "price-levels";
+
+        public BasicPivotStrategy(ILogger<BasicPivotStrategy> log,
             IPriceSubscriber priceSubscriber, ICandleSubscriber candleSubscriber,
-            IPriceLevelSubscriber priceLevelSubscriber)
+            IPriceLevelSubscriber priceLevelSubscriber, ITradeExecutorPrice tradeExecutorPrice, IDistributedCache<List<PriceLevel>> cache)
         {
             _logger = log;
-            _httpRepository = httpRepository;
-            _mapper = mapper;
 
             _priceSubscriber = priceSubscriber;
             _candleSubscriber = candleSubscriber;
             _priceLevelSubscriber = priceLevelSubscriber;
+            _tradeExecutorPrice = tradeExecutorPrice;
+            _cache = cache;
 
             _priceLevelSubscriber.PriceLevelMessageEventHandler += PriceLevelSubscriber_PriceLevelMessageEventHandler;
+            _priceLevelSubscriber.PriceLevelMessageEventHandler += PriceLevelSubscriber_PriceLevelMessageEventHandler_Cache;
+
             _candleSubscriber.CandleMessageEventHandler += CandleSubscriber_CandleMessageEventHandler;
             _priceSubscriber.PriceMessageEventHandler += PriceSubscriber_PriceMessageEventHandler;
+        }
+
+        private void PriceLevelSubscriber_PriceLevelMessageEventHandler_Cache(object sender, MessageHandlerEventArgs e)
+        {
+            var priceLevel = JsonConvert.DeserializeObject<List<PriceLevel>>(e.Message);
+            UpdatePriceLevelCache(priceLevel);
         }
 
         public void PriceLevelSubscriber_PriceLevelMessageEventHandler(object sender, MessageHandlerEventArgs e)
@@ -64,32 +70,26 @@ namespace Archimedes.Service.Price
         public void PriceSubscriber_PriceMessageEventHandler(object sender, MessageHandlerEventArgs e)
         {
             var price = JsonConvert.DeserializeObject<PriceDto>(e.Message);
+
+            _tradeExecutorPrice.Execute(price, _lastBidPrice, _lastAskPrice);
+
+            if (price.Ask > 0 )
+            {
+                _lastAskPrice = price.Ask;
+            }
+
+            if (price.Bid > 0)
+            {
+                _lastBidPrice = price.Bid;
+            }
+
             UpdateTrade(price);
-            UpdateTransactionPriceTargets(price);
         }
 
-        public void UpdateTransactionPriceTargets(PriceDto price)
+        public async void Consume(List<PriceLevel> priceLevels, List<CandleDto> candles)
         {
-            foreach (var target in _transactions.SelectMany(transaction => transaction.ProfitTargets))
-            {
-                target.UpdateTrade(price);
-            }
-
-            foreach (var target in _transactions.SelectMany(transaction => transaction.StopTargets))
-            {
-                target.UpdateTrade(price);
-            }
-        }
-
-
-        public async Task Consume(CancellationToken cancellationToken)
-        {
-            var priceLevels =
-                await _httpRepository.GetPriceLevelsByMarketByGranularityByFromDate(Market, Granularity,
-                    DateTime.Today.AddDays(-100));
-            _priceLevels.AddRange(MapLevels(priceLevels));
-
-            var candles = await _httpRepository.GetCandlesByMarketByFromDate(Market, DateTime.Today.AddDays(-100));
+            await _cache.SetAsync(CacheName, priceLevels);
+            _priceLevels.AddRange(priceLevels);
             _candles.AddRange(candles);
         }
 
@@ -100,6 +100,19 @@ namespace Archimedes.Service.Price
             {
                 _priceLevels.Add(level);
             }
+        }
+
+        public async void UpdatePriceLevelCache(List<PriceLevel> priceLevel)
+        {
+            var cachePriceLevels = await _cache.GetAsync(CacheName);
+
+            foreach (var level in priceLevel.Where(level =>
+                !cachePriceLevels.Select(a => a.TimeStamp).Contains(level.TimeStamp)))
+            {
+                cachePriceLevels.Add(level);
+            }
+
+            await _cache.SetAsync(CacheName, cachePriceLevels);
         }
 
         public void UpdateCandles(List<CandleDto> candleDto)
@@ -115,73 +128,15 @@ namespace Archimedes.Service.Price
 
         public void UpdateTrade(PriceDto price)
         {
-            //check if range has been broken 
-            // this could be a slow query
-            foreach (var priceLevel in _priceLevels.Where(a =>
-                a.TimeStamp < price.TimeStamp && a.TimeStamp > price.TimeStamp.AddDays(-1)))
+            foreach (var target in _transactions.SelectMany(transaction => transaction.ProfitTargets))
             {
-                if (priceLevel.TradeType == "BUY")
-                {
-                    if (price.Ask < priceLevel.AskPrice && _lastAskPrice > priceLevel.AskPrice)
-                    {
-                        //trade has passed the entry zone
-                        if (!priceLevel.LevelBroken)
-                        {
-                            var trade = new Transaction(5, 3, 1.32m, 3, "", 100, priceLevel.TradeType, null);
-                            priceLevel.LevelBroken = true;
-                            priceLevel.LevelBrokenDate = DateTime.Now;
-                            priceLevel.Trades++;
-                            _transactions.Add(trade);
-                            PostTrade(trade);
-                        }
-                    }
-
-                    _lastAskPrice = priceLevel.AskPrice;
-                }
-
-                if (priceLevel.TradeType == "SELL")
-                {
-                    if (price.Bid > priceLevel.BidPrice && _lastBidPrice < priceLevel.BidPrice)
-                    {
-                        if (!priceLevel.LevelBroken)
-                        {
-                            var trade = new Transaction(5, 3, 1.32m, 3, "", 100, priceLevel.TradeType, null);
-                            priceLevel.LevelBroken = true;
-                            priceLevel.LevelBrokenDate = DateTime.Now;
-                            priceLevel.Trades++;
-                            _transactions.Add(trade);
-                            PostTrade(trade);
-                        }
-                    }
-
-                    _lastBidPrice = priceLevel.BidPrice;
-                }
+                target.UpdateTrade(price);
             }
-        }
 
-        public void PostTrade(Transaction transaction)
-        {
-            foreach (var profitTarget in transaction.ProfitTargets)
+            foreach (var target in _transactions.SelectMany(transaction => transaction.StopTargets))
             {
-                var tradeDto = new TradeDto()
-                {
-                    Market = transaction.PriceLevel.Market,
-                    BuySell = transaction.BuySell,
-                    EntryPrice = profitTarget.EntryPrice,
-                    TargetPrice = profitTarget.TargetPrice,
-                    ClosePrice = transaction.StopTargets.First().TargetPrice,
-                    Strategy = transaction.RiskRewardProfile,
-                    Success = false,
-                    Timestamp = DateTime.Now
-                };
-
-                _httpRepository.AddTrade(tradeDto);
+                target.UpdateTrade(price);
             }
-        }
-
-        private IEnumerable<PriceLevel> MapLevels(IEnumerable<PriceLevelDto> levels)
-        {
-            return _mapper.Map<IEnumerable<PriceLevel>>(levels);
         }
     }
 }

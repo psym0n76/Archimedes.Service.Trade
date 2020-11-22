@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using AutoMapper;
+using Phema.Caching;
 
 namespace Archimedes.Service.Trade
 {
@@ -24,6 +25,9 @@ namespace Archimedes.Service.Trade
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDistributedCache()
+                .AddDistributedMemoryCache();
+
             services.Configure<Config>(Configuration.GetSection("AppSettings"));
             services.AddSingleton(Configuration);
             var config = Configuration.GetSection("AppSettings").Get<Config>();

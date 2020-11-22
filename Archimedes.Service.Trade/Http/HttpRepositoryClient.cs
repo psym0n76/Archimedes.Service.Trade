@@ -91,6 +91,21 @@ namespace Archimedes.Service.Trade.Http
             return priceLevels.ToList();
         }
 
+        public async Task UpdatePriceLevel(PriceLevelDto priceLevel)
+        {
+            var payload = new JsonContent(priceLevel);
+
+            var response = await _client.PutAsync("price-level", payload);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"POST Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
+                return;
+            }
+
+            _logger.LogInformation($"Added Trade {priceLevel}");
+        }
+
         public async Task AddTrade(TradeDto trade)
         {
             var payload = new JsonContent(trade);
