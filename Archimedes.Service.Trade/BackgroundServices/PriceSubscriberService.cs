@@ -24,6 +24,7 @@ namespace Archimedes.Service.Trade
             {
                 try
                 {
+                    _logger.LogInformation("Subscribed to Price");
                     _priceSubscriber.Consume(stoppingToken);
                 }
                 catch (Exception e)

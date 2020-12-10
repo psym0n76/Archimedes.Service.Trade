@@ -23,6 +23,7 @@ namespace Archimedes.Service.Trade
             {
                 try
                 {
+                    _logger.LogInformation("Subscribed to Candles");
                     _candleSubscriber.Consume(stoppingToken);
                 }
                 catch (Exception e)

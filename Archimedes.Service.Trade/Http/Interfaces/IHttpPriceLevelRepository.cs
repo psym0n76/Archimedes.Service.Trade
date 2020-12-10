@@ -5,17 +5,13 @@ using Archimedes.Library.Message.Dto;
 
 namespace Archimedes.Service.Trade.Http
 {
-    public interface IHttpRepositoryClient
+    public interface IHttpPriceLevelRepository
     {
+        Task UpdatePriceLevel(PriceLevelDto priceLevel);
+
         Task<List<PriceLevelDto>> GetPriceLevelsByMarketByFromDate(string market, DateTime fromDate);
         Task<List<PriceLevelDto>> GetPriceLevelsByMarketByGranularityByFromDate(string market, string granularity, DateTime fromDate);
 
-        Task<List<CandleDto>> GetCandlesByMarketByFromDate(string market, DateTime fromDate);
-
-        Task<List<PriceDto>> GetPricesByMarketByFromDate(string market, string granularity, DateTime fromDate);
-
-        Task UpdatePriceLevel(PriceLevelDto priceLevel);
-
-        Task AddTrade(TradeDto trade);
+        Task<List<PriceLevelDto>> GetPriceLevelCurrentAndPreviousDay(string market,string granularity);
     }
 }

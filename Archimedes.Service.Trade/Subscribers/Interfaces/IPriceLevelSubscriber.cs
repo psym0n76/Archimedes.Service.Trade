@@ -7,8 +7,7 @@ namespace Archimedes.Service.Trade
 {
     public interface IPriceLevelSubscriber
     {
-        //event EventHandler<CandleMessageEventArgs> CandleMessageEventHandler;
-        event EventHandler<MessageHandlerEventArgs> PriceLevelMessageEventHandler;
+        event EventHandler<PriceLevelMessageHandlerEventArgs> PriceLevelMessageEventHandler;
 
         Task Consume(CancellationToken cancellationToken);
     }

@@ -2,14 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using Archimedes.Library.Message.Dto;
-using Archimedes.Service.Price;
-using Archimedes.Service.Trade.Http;
-using Archimedes.Service.Trade.Strategies;
-using Microsoft.Extensions.Logging;
-using Moq;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
-using Phema.Caching;
 
 namespace Archimedes.Service.Trade.Tests
 {
@@ -32,45 +25,31 @@ namespace Archimedes.Service.Trade.Tests
             Assert.True(prices.Any());
         }
 
+        //private IBasicPivotStrategy GetSubjectUnderTest()
+        //{
+        //    var mockLogger = new Mock<ILogger<BasicPivotStrategy>>();
 
-        [Test]
-        public void Should_Iterate_EachPrice_ThroughModel()
-        {
-            var subject = GetSubjectUnderTest();
-            var prices = GetPrices();
+        //    var mockPriceSubscriber = new Mock<IPriceSubscriber>();
+        //    var mockCandleSubscriber = new Mock<ICandleSubscriber>();
+        //    var mockPriceLevelSubscriber = new Mock<IPriceLevelSubscriber>();
 
-            var candles = new List<CandleDto>();
+        //    var mockTradeExecutor = new Mock<ITradeExecutor>();
+        //    var mockTradeValuation = new Mock<ITradeValuation>();
+        //    var mockCandleLoader = new Mock<ICandleLoader>();
 
-            var priceLevels = GetPriceLevels();
-            subject.Consume(priceLevels, candles);
-
-            foreach (var price in prices)
-            {
-                subject.UpdateTrade(price);
-            }
-
-            Assert.IsTrue(true);
-        }
-
-        private IBasicPivotStrategy GetSubjectUnderTest()
-        {
-            var mockLogger = new Mock<ILogger<BasicPivotStrategy>>();
+        //    var mockCache = new Mock<ICacheManager>();
+        //    var mockFactory = new Mock<ITradeProfileFactory>();
 
 
-            var mockPriceSubscriber = new Mock<IPriceSubscriber>();
-            var mockCandleSubscriber = new Mock<ICandleSubscriber>();
-            var mockPriceLevelSubscriber = new Mock<IPriceLevelSubscriber>();
-            var mockTradeExecutor = new Mock<ITradeExecutorPrice>();
-            var mockCache = new Mock<IDistributedCache<List<PriceLevel>>>();
-            
-            return new BasicPivotStrategy(mockLogger.Object,mockPriceSubscriber.Object, mockCandleSubscriber.Object, mockPriceLevelSubscriber.Object,mockTradeExecutor.Object, mockCache.Object);
+        //    return new BasicPivotStrategy(mockPriceSubscriber.Object, mockCandleSubscriber.Object,
+        //        mockPriceLevelSubscriber.Object, mockTradeExecutor.Object,mockTradeValuation.Object, mockCandleLoader.Object, mockFactory.Object, mockLogger.Object, mockCache.Object);
 
-        }
+        //}
 
-        private List<PriceLevel> GetPriceLevels()
+        private List<PriceLevelDto> GetPriceLevels()
         {
             var data = new FileReader();
-            var priceLevels = data.Reader<PriceLevel>("GBPUSD_15Min_20201101_PIVOT7");
+            var priceLevels = data.Reader<PriceLevelDto>("GBPUSD_15Min_20201101_PIVOT7");
 
             //2020-10-07T22:45:00 LOW PIVOT BUY
             return priceLevels;

@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Archimedes.Service.Trade.Trade;
+using NUnit.Framework;
 
 namespace Archimedes.Service.Trade.Tests
 {
@@ -58,7 +59,17 @@ namespace Archimedes.Service.Trade.Tests
 
         private static Transaction GetSellTrade()
         {
-            return new Transaction(5, 3, 1.30m, 3, "basic-split-profit-equally", 100, "sell", null);
+            var tradeParams = new TradeParameters()
+            {
+                BuySell = "SELL",
+                RiskReward = 3,
+                EntryPrice = 1.30m,
+                SpreadAsPips = 5,
+                Market = "GBP/USD",
+                TradeCounter = 3
+            };
+
+            return new Transaction(tradeParams);
         }
     }
 }
