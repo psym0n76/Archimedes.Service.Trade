@@ -101,7 +101,7 @@ namespace Archimedes.Service.Trade
                 endpoints.MapControllers();
             });
 
-            runner.Run("GBP/USD", "15Min", new CancellationToken());
+            //runner.Run("GBP/USD", "15Min", new CancellationToken());
         }
     }
 }
