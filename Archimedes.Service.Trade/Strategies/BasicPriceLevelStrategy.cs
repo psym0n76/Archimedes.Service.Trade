@@ -27,7 +27,6 @@ namespace Archimedes.Service.Price
 
         public async void Consume(List<PriceLevelDto> priceLevels, CancellationToken token)
         {
-            // setup event
             _priceLevelSubscriber.PriceLevelMessageEventHandler += PriceLevelSubscriber_PriceLevelMessageEventHandler;
 
             await InitialCacheLoad(priceLevels);

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Archimedes.Library.Candles;
 using Archimedes.Library.Enums;
 using Archimedes.Library.Extensions;
+using Archimedes.Library.Logger;
 using Archimedes.Library.Message.Dto;
 using Archimedes.Library.RabbitMq;
 using Microsoft.Extensions.Logging;
@@ -23,9 +24,11 @@ namespace Archimedes.Service.Trade.Strategies
 
         private readonly ITradeProfileFactory _tradeProfileFactory;
 
-        private readonly List<CandleDto> _candles = new List<CandleDto>();
-        private readonly List<Candle> _loadedCandles = new List<Candle>();
-
+        private readonly List<CandleDto> _candles = new();
+        private readonly List<Candle> _loadedCandles = new();
+        private readonly BatchLog _batchLog = new();
+        private string _logId;
+        
         private string _tradeProfile;
 
         public BasicCandleStrategy(ICandleSubscriber candleSubscriber, ILogger<BasicCandleStrategy> logger, ICandleLoader candleLoader, ICacheManager cache, ITradeProfileFactory tradeProfileFactory)
@@ -47,26 +50,41 @@ namespace Archimedes.Service.Trade.Strategies
 
         private void CandleSubscriber_CandleMessageEventHandler(object sender, CandleMessageHandlerEventArgs e)
         {
-            _logger.LogInformation("Candle Update Received");
 
+            _logId = _batchLog.Start();
+            _batchLog.Update(_logId, $"Candle Update Received {e.Candle}");
+            
             AddCandle(e.Candle);
 
             if (LoadCandles()) // missing granularity
             {
                 ValidatePrice();
             }
+
+            _logger.LogInformation(_batchLog.Print(_logId));
+            
         }
 
         private bool LoadCandles()
         {
             try
             {
+                _batchLog.Update(_logId, $"Candle load started {_candles.Count}");
                 var loadedCandles = _candleLoader.Load(_candles); // its only loading on candle but needs history
 
                 if (loadedCandles.Any())
                 {
+                    _batchLog.Update(_logId, $"Candles loaded {loadedCandles.Count}");
                     _loadedCandles.Clear();
+                    _batchLog.Update(_logId, $"Candles cleared from cache");
                     _loadedCandles.AddRange(loadedCandles);
+                    _batchLog.Update(_logId, $"Candles added to cache  {loadedCandles.Count}");
+                }
+
+                else
+                {
+                    _batchLog.Update(_logId, $"Candles not Found");
+                    return false;
                 }
 
                 return true;
@@ -88,15 +106,22 @@ namespace Archimedes.Service.Trade.Strategies
 
         public void AddCandle(CandleDto candle)
         {
+            _batchLog.Update(_logId, $"Attempting to add Candle: {candle.TimeStamp}");
             if (!_candles.Select(a => a.TimeStamp).Contains(candle.TimeStamp))
             {
+                _batchLog.Update(_logId, $"Candle added: {candle.TimeStamp}");
                 _candles.Add(candle);
+            }
+            else
+            {
+                _batchLog.Update(_logId, $"Candle not added: {candle.TimeStamp}");
             }
         }
 
         private async Task ValidatePriceLevelByEngulf(Candle lastCandle)
         {
-            _logger.LogInformation("ValidatePriceLevelByEngulf Start");
+            _batchLog.Update(_logId, $"ValidatePriceLevelByEngulf Start {lastCandle.TimeStamp}");
+            
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache);
 
             foreach (var level in cachePriceLevels.Where(level => level.Active))
@@ -111,7 +136,8 @@ namespace Archimedes.Service.Trade.Strategies
 
         private async Task ValidatePriceLevelsOpen(Candle lastCandle)
         {
-            _logger.LogInformation("ValidatePriceLevelsOpen Start");
+            _batchLog.Update(_logId, $"ValidatePriceLevelsOpen Start {lastCandle.TimeStamp}");
+            
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache);
 
             foreach (var level in cachePriceLevels.Where(level => level.Active))
@@ -127,7 +153,7 @@ namespace Archimedes.Service.Trade.Strategies
         {
             if (level.BuySell == "SELL" && lastCandle.Close.Bid > level.BidPriceRange)
             {
-                _logger.LogInformation("ValidateSellPriceLevel - VALID");
+                _batchLog.Update(_logId, $"ValidateSellPriceLevel - VALID {level.TimeStamp}");
                 level.Active = false;
             }
         }
@@ -136,18 +162,20 @@ namespace Archimedes.Service.Trade.Strategies
         {
             if (level.BuySell == "BUY" && lastCandle.Close.Ask < level.AskPriceRange)
             {
-                _logger.LogInformation("ValidateBuyPriceLevel - VALID");
+                _batchLog.Update(_logId, $"ValidateBuyPriceLevel - VALID {level.TimeStamp}");
                 level.Active = false;
             }
         }
 
         private void ProcessEngulfCandle(Candle candle, PriceLevelDto priceLevelDto)
         {
+            _batchLog.Update(_logId, "ProcessEngulfCandle");
+            
             if (candle.Type() == CandleType.Engulfing && candle.BodyFillRate() > 0.5m &&
                 candle.Color() == priceLevelDto.BuySell.Color())
             {
                 priceLevelDto.Active = false;
-                _logger.LogInformation("ProcessEngulfCandle - TradeBooked");
+                _batchLog.Update(_logId, "ProcessEngulfCandle - Trade Booked");
 
                 var price = new PriceDto()
                 {
@@ -165,7 +193,7 @@ namespace Archimedes.Service.Trade.Strategies
         private void BuildTradeEvent(PriceDto price, string buySell)
         {
             // move this to Transaction stuff
-            _logger.LogInformation("BuildTradeEvent - TradeBooked");
+            _batchLog.Update(_logId, "BuildTradeEvent - TradeBooked");
             var transaction = _tradeProfileFactory.GetTradeGenerationService(_tradeProfile).Generate(price, buySell);
 
             var eventArgs = new TradeMessageHandlerEventArgs() { Transaction = transaction };

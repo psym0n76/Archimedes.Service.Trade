@@ -22,7 +22,7 @@ namespace Archimedes.Service.Price
 
         private void Consumer_HandleMessage(object sender, CandleMessageHandlerEventArgs e)
         {
-            _logger.LogInformation($"Received Candle Update {e.Message}");
+            _logger.LogInformation($"Received Candle Update {e.Candle}");
             CandleMessageEventHandler?.Invoke(sender, e);
         }
 

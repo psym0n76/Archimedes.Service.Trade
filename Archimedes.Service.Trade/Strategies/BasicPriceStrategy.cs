@@ -1,6 +1,7 @@
 ﻿using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
+using Archimedes.Library.Logger;
 using Archimedes.Library.Message.Dto;
 using Archimedes.Library.RabbitMq;
 using Archimedes.Service.Price;
@@ -15,6 +16,9 @@ namespace Archimedes.Service.Trade.Strategies
         private readonly ILogger<BasicPriceStrategy> _logger;
         private readonly ITradeExecutor _tradeExecutor;
         private readonly ITradeValuation _tradeValuation;
+
+        private readonly BatchLog _batchLog = new();
+        private string _logId;
 
         private const string LastPriceCache = "price";
         private readonly ICacheManager _cache;
@@ -48,13 +52,16 @@ namespace Archimedes.Service.Trade.Strategies
 
         private void PriceSubscriber_PriceMessageEventHandler(object sender, PriceMessageHandlerEventArgs e)
         {
-            _logger.LogInformation("Price Update Received");
+            _logId = _batchLog.Start();
+            _batchLog.Update(_logId,"Price Update Received");
 
-            // _tradeExecutor.ExecuteLocked(price, _tradeProfile);
-            // _tradeValuation.UpdateTradeLocked(price);
+            _tradeExecutor.ExecuteLocked(e.Price, _tradeProfile);
+            _batchLog.Update(_logId, $"Trade Executor {_tradeProfile} Price:{e.Price.TimeStamp}");
 
-            _logger.LogInformation("Received Price Update tt 2");
+            _tradeValuation.UpdateTradeLocked(e.Price);
+            _batchLog.Update(_logId, $"Trade Valuation Price:{e.Price.TimeStamp}");
+
+            _logger.LogInformation(_batchLog.Print(_logId));
         }
-
     }
 }
