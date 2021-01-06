@@ -115,7 +115,7 @@ namespace Archimedes.Service.Trade.Strategies
         private async Task UpdatePriceLevelTable(PriceLevelDto priceLevel)
         {
             _batchLog.Update(_logId,
-                $"Update PriceLevel Table {priceLevel.TimeStamp} {priceLevel.LevelsBroken} {priceLevel.Active} {priceLevel.Strategy} {priceLevel.BuySell}");
+                $"Update PriceLevel Table {priceLevel.Strategy} {priceLevel.TimeStamp}" );
             await _priceLevel.UpdatePriceLevel(priceLevel);
         }
 
@@ -163,7 +163,7 @@ namespace Archimedes.Service.Trade.Strategies
 
         private async Task UpdateLastPriceCache(PriceDto price)
         {
-            _batchLog.Update(_logId, $"Updated LastPrice {price.Bid} {price.Ask} {price.TimeStamp} added to Cache ");
+            _batchLog.Update(_logId, $"Updated LastPrice to Cache ");
             await _cache.SetAsync(LastPriceCache,
                 new PriceDto() {Ask = price.Ask, Bid = price.Bid, TimeStamp = price.TimeStamp});
         }
@@ -174,7 +174,7 @@ namespace Archimedes.Service.Trade.Strategies
             if (price.Bid + tolerance <= priceLevel.BidPrice || lastBidPrice >= priceLevel.BidPrice) return false;
 
             _batchLog.Update(_logId,
-                $"Price has crossed SELL PriceLevel {priceLevel.Strategy} {priceLevel.BidPrice} {priceLevel.TimeStamp}  with Bid: {price.Bid} + Tolerance: {tolerance} LastPrice: {lastBidPrice}");
+                $"BidPrice {price.Bid} + {tolerance} has crossed SELL PriceLevel {priceLevel.BidPrice} {priceLevel.TimeStamp}");
             return true;
         }
 
@@ -184,7 +184,7 @@ namespace Archimedes.Service.Trade.Strategies
             if (price.Ask - tolerance >= priceLevel.AskPrice || lastAskPrice <= priceLevel.AskPrice) return false;
 
             _batchLog.Update(_logId,
-                $"Price has crossed BUY PriceLevel {priceLevel.Strategy} {priceLevel.AskPrice} {priceLevel.TimeStamp} with Ask: {price.Ask}  - Tolerance: {tolerance} LastPrice: {lastAskPrice}");
+                $"AskPrice {price.Ask} - {tolerance} has crossed BUY PriceLevel {priceLevel.AskPrice} {priceLevel.TimeStamp}");
             return true;
         }
 

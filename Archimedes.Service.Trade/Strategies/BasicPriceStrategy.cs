@@ -20,7 +20,7 @@ namespace Archimedes.Service.Trade.Strategies
         private string _logId;
 
         private const string LastPriceCache = "price";
-        private const decimal ToleranceOnePip = 0.001m;
+        private const decimal ToleranceOnePip = 0.0001m;
         private readonly ICacheManager _cache;
 
         private string _tradeProfile;
