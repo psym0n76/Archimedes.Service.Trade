@@ -146,7 +146,7 @@ namespace Archimedes.Service.Trade.Strategies
                 if (candle.BidHigh > level.BidPriceRange)
                 {
                     level.OutsideRange = true;
-                    level.OutsideOfRangeDate = candle.TimeStamp;
+                    level.OutsideRangeDate = candle.TimeStamp;
                     _batchLog.Update(_logId, $"OutsideRange: {level.OutsideRange} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }
@@ -160,7 +160,7 @@ namespace Archimedes.Service.Trade.Strategies
                 if (candle.AskLow < level.AskPriceRange)
                 {
                     level.OutsideRange = true;
-                    level.OutsideOfRangeDate = candle.TimeStamp;
+                    level.OutsideRangeDate = candle.TimeStamp;
                     _batchLog.Update(_logId, $"OutsideRange: {level.OutsideRange} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }

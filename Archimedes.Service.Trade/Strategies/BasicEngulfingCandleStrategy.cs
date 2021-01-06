@@ -239,7 +239,7 @@ namespace Archimedes.Service.Trade.Strategies
                 _batchLog.Update(_logId,
                     $"OutsideOfRange - SELL and LastCandleClose: {lastCandle.Close.Bid} > PriceLevel: {level.BidPriceRange} on {level.TimeStamp}");
                 level.OutsideRange = true;
-                level.OutsideOfRangeDate = lastCandle.TimeStamp;
+                level.OutsideRangeDate = lastCandle.TimeStamp;
             }
         }
 
@@ -250,7 +250,7 @@ namespace Archimedes.Service.Trade.Strategies
                 _batchLog.Update(_logId,
                     $"OutsideOfRange - BUY and LastCandleClose: {lastCandle.Close.Ask} < PriceLevel: {level.BidPriceRange} on {level.TimeStamp}");
                 level.OutsideRange = true;
-                level.OutsideOfRangeDate = lastCandle.TimeStamp;
+                level.OutsideRangeDate = lastCandle.TimeStamp;
             }
         }
 

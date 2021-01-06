@@ -34,7 +34,7 @@ namespace Archimedes.Service.Trade.Http
             if (!response.IsSuccessStatusCode)
             {
                 if (response.RequestMessage != null)
-                    _logger.LogError($"POST Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
+                    _logger.LogError($"PUT Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
             }
         }
 
