@@ -1,5 +1,6 @@
 using System;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Web;
@@ -46,7 +47,7 @@ namespace Archimedes.Service.Trade
                     //services.AddHostedService<PriceSubscriberService>();
                     //services.AddHostedService<CandleSubscriberService>();
                     //services.AddHostedService<PriceLevelSubscriberService>();
-                    //services.AddHostedService<StrategyRunnerService>();
+                    services.AddHostedService<StrategyRunnerService>();
                 });
     }
 }

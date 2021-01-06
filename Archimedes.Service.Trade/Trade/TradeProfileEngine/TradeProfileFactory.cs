@@ -2,7 +2,7 @@
 
 namespace Archimedes.Service.Trade.Strategies
 {
-    public class TradeProfileFactory : ITradeProfileFactory
+    public class TradeProfileFactory: ITradeProfileFactory
     {
 
         private readonly IServiceProvider _serviceProvider;
@@ -19,7 +19,8 @@ namespace Archimedes.Service.Trade.Strategies
             {
                 case "TradeProfileRiskThreeTimesEqual":
 
-                    return (ITradeProfile) _serviceProvider.GetService(typeof(TradeProfileRiskThreeTimesEqual));
+                    //return (ITradeProfile) _serviceProvider.GetService(typeof(TradeProfileRiskThreeTimesEqual));
+                    return new TradeProfileRiskThreeTimesEqual();
 
 
                 default:

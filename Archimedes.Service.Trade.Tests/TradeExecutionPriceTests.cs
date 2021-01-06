@@ -17,7 +17,7 @@ namespace Archimedes.Service.Trade.Tests
         public void Should_UpdatePriceLevel_When_Price_Crosses_PriceLevel()
         {
             var mockHttpClient = new Mock<IHttpPriceLevelRepository>();
-            var mockLogger = new Mock<ILogger<TradeExecutor>>();
+            var mockLogger = new Mock<ILogger<PriceTradeExecutor>>();
             var mockCache = new Mock<ICacheManager>();
 
             var mockTradeProfile = new Mock<ITradeProfileFactory>();
@@ -57,11 +57,11 @@ namespace Archimedes.Service.Trade.Tests
 
 
 
-            var subject = new TradeExecutor(mockLogger.Object, mockHttpClient.Object, mockTradeProfile.Object, mockCache.Object);
+            var subject = new PriceTradeExecutor(mockLogger.Object, mockHttpClient.Object, mockTradeProfile.Object, mockCache.Object);
 
             var price = new PriceDto() {Ask = 1.2999m, Bid = 1.2001m};
 
-            subject.Execute(price, "");
+            subject.Execute(price, "", 0.0001m);
 
             mockHttpClient.Verify(a=>a.UpdatePriceLevel(It.IsAny<PriceLevelDto>()),Times.Exactly(2));
         }

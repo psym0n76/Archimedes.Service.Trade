@@ -17,7 +17,7 @@ namespace Archimedes.Service.Trade.Strategies
         private const string TransactionCache = "transaction";
         private readonly object _locker = new object();
 
-        public TradeGenerator(ITradeExecutor executor, IHttpTradeRepository http, IProducer<TradeMessage> producer, ICacheManager cache)
+        public TradeGenerator(IEngulfingCandleStrategy executor, IHttpTradeRepository http, IProducer<TradeMessage> producer, ICacheManager cache)
         {
             _http = http;
             _producer = producer;

@@ -1,11 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using Archimedes.Library.Message.Dto;
+﻿using System.Threading;
 
 namespace Archimedes.Service.Price
 {
     public interface IBasicPriceLevelStrategy
     {
-        void Consume(List<PriceLevelDto> priceLevels, CancellationToken token);
+        void Consume(string market, string granularity, CancellationToken token);
     }
 }

@@ -2,6 +2,7 @@ using System.Threading;
 using Archimedes.Library.Candles;
 using Archimedes.Library.Domain;
 using Archimedes.Library.Message;
+using Archimedes.Library.Price;
 using Archimedes.Library.RabbitMq;
 using Archimedes.Service.Price;
 using Archimedes.Service.Trade.Http;
@@ -28,6 +29,8 @@ namespace Archimedes.Service.Trade
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+
             services.AddDistributedMemoryCache();
             services.AddTransient<ICacheManager, CacheManager>();
 
@@ -43,37 +46,45 @@ namespace Archimedes.Service.Trade
                 new PriceLevelFanoutConsumer(config.RabbitHost, config.RabbitPort, "Archimedes_Price_Level"));
 
             services.AddTransient<ICandleFanoutConsumer>(x =>
-                new CandleFanoutConsumer(config.RabbitHost, config.RabbitPort, "Archimedes_Candle"));
+                new CandleFanoutConsumer(config.RabbitHost, config.RabbitPort, "Archimedes_Candle_GBPUSD.5Min"));
 
 
-            services.AddTransient<IProducer<TradeMessage>>(x => new Producer<TradeMessage>(config.RabbitHost, config.RabbitPort, config.RabbitExchange));
+            services.AddTransient<IProducer<TradeMessage>>(x =>
+                new Producer<TradeMessage>(config.RabbitHost, config.RabbitPort, config.RabbitExchange));
 
             services.AddTransient<IStrategyRunner, StrategyRunner>();
 
 
-            services.AddTransient<IBasicCandleStrategy, BasicCandleStrategy>();
+            services.AddTransient<IEngulfingCandleStrategy, BasicEngulfingCandleStrategy>();
             services.AddTransient<IBasicPriceLevelStrategy, BasicPriceLevelStrategy>();
             services.AddTransient<IBasicPriceStrategy, BasicPriceStrategy>();
+            services.AddTransient<IBasicPriceStrategyHistoryUpdater, BasicPriceStrategyHistoryUpdater>();
 
             services.AddTransient<IPriceSubscriber, PriceSubscriber>();
             services.AddTransient<IPriceLevelSubscriber, PriceLevelSubscriber>();
             services.AddTransient<ICandleSubscriber, CandleSubscriber>();
 
             services.AddTransient<ICandleLoader, CandleLoader>();
+            services.AddTransient<IPriceLevelLoader, PriceLevelLoader>();
+            services.AddTransient<ICandleHistoryLoader, CandleHistoryLoader>();
+            services.AddTransient<ICandleLoader, CandleLoader>();
+            services.AddTransient<ILastPriceLoader, LastPriceLoader>();
+
+            services.AddTransient<IPriceAggregator>(x => new PriceAggregator(10));
 
             services.AddTransient<ITradeValuation, TradeValuation>();
-            services.AddTransient<ITradeExecutor, TradeExecutor>();
+            services.AddTransient<IPriceTradeExecutor, PriceTradeExecutor>();
             services.AddTransient<ITradeGenerator, TradeGenerator>();
+
             services.AddTransient<ITradeProfileFactory, TradeProfileFactory>();
 
 
             services.AddAutoMapper(typeof(Startup));
             services.AddLogging();
 
-            services.AddScoped<TradeProfileFactory>();
-
-            services.AddScoped<TradeProfileRiskThreeTimesEqual>()
-                .AddScoped<ITradeProfile, TradeProfileRiskThreeTimesEqual>(s => s.GetService<TradeProfileRiskThreeTimesEqual>());
+            //services.Add<TradeProfileFactory>();
+            //services.AddScoped<TradeProfileRiskThreeTimesEqual>()
+            //    .AddScoped<ITradeProfile, TradeProfileRiskThreeTimesEqual>(s => s.GetService<TradeProfileRiskThreeTimesEqual>());
 
 
             services.AddHttpClient<IHttpTradeRepository, HttpTradeRepository>();
@@ -82,10 +93,11 @@ namespace Archimedes.Service.Trade
             services.AddHttpClient<IHttpCandleRepository, HttpCandleRepository>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IStrategyRunner runner)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {

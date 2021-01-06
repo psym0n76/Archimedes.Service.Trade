@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Archimedes.Library.Logger;
 using Archimedes.Library.Message.Dto;
 using Archimedes.Library.RabbitMq;
 using Archimedes.Service.Trade;
@@ -16,46 +17,70 @@ namespace Archimedes.Service.Price
         private const string PriceLevelCache = "price-levels";
         private readonly ICacheManager _cache;
         private readonly IPriceLevelSubscriber _priceLevelSubscriber;
+        private readonly IPriceLevelLoader _priceLevel;
+        private readonly BatchLog _batchLog = new();
+        private string _logId;
 
         public BasicPriceLevelStrategy(IPriceLevelSubscriber priceLevelSubscriber,
-            ILogger<BasicPriceLevelStrategy> logger, ICacheManager cache)
+            ILogger<BasicPriceLevelStrategy> logger, ICacheManager cache, IPriceLevelLoader priceLevel)
         {
             _priceLevelSubscriber = priceLevelSubscriber;
             _logger = logger;
             _cache = cache;
+            _priceLevel = priceLevel;
         }
 
-        public async void Consume(List<PriceLevelDto> priceLevels, CancellationToken token)
+        public async void Consume(string market, string granularity, CancellationToken token)
         {
+            _logId = _batchLog.Start();
+
+            await InitialLoad(market, granularity);
+
+            _logger.LogInformation(_batchLog.Print(_logId));
+
             _priceLevelSubscriber.PriceLevelMessageEventHandler += PriceLevelSubscriber_PriceLevelMessageEventHandler;
-
-            await InitialCacheLoad(priceLevels);
-
             await _priceLevelSubscriber.Consume(token);
         }
 
-        private async Task InitialCacheLoad(List<PriceLevelDto> priceLevels)
+        private async Task InitialLoad(string market, string granularity)
         {
+            var priceLevels = await _priceLevel.LoadAsync(market, granularity);
+            _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) returned from Table");
+
             await _cache.SetAsync(PriceLevelCache, priceLevels);
-            _logger.LogInformation($"Initial load to the PriceLevel Cache {priceLevels.Count} item(s)");
+            _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) added to Cache");
+
+            _logger.LogInformation((_batchLog.Print(_logId)));
         }
 
-        private void PriceLevelSubscriber_PriceLevelMessageEventHandler(object sender, PriceLevelMessageHandlerEventArgs e)
+        private void PriceLevelSubscriber_PriceLevelMessageEventHandler(object sender,
+            PriceLevelMessageHandlerEventArgs e)
         {
-            _logger.LogInformation("PriceLevel Update Received");
-            UpdateCache(e.PriceLevel);
+            UpdateCache(e.PriceLevels);
         }
 
 
-        public async void UpdateCache(PriceLevelDto priceLevel)
+        public async void UpdateCache(List<PriceLevelDto> priceLevel)
         {
+            _logId = _batchLog.Start();
+            _batchLog.Update(_logId, $"PriceLevel Update {priceLevel[0].Strategy} {priceLevel[0].BidPrice} {priceLevel[0].BidPriceRange} {priceLevel[0].TimeStamp}");
+
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache);
 
-            if (cachePriceLevels.Any(a => a.TimeStamp == priceLevel.TimeStamp)) return;
+            foreach (var cachePriceLevel in cachePriceLevels)
+            {
+                if (cachePriceLevels.Any(a => a.TimeStamp == cachePriceLevel.TimeStamp))
+                {
+                    _batchLog.Update(_logId, $"PriceLevel exists {cachePriceLevel.TimeStamp}");
+                }
+                else
+                {
+                    cachePriceLevels.Add(cachePriceLevel);
 
-            cachePriceLevels.Add(priceLevel);
-            await _cache.SetAsync(PriceLevelCache, cachePriceLevels);
-            _logger.LogInformation("Added PriceLevel to Cache");
+                    _batchLog.Update(_logId, $"PriceLevel added to Cache {cachePriceLevel.TimeStamp}");
+                    await _cache.SetAsync(PriceLevelCache, cachePriceLevels);
+                }
+            }
         }
     }
 }

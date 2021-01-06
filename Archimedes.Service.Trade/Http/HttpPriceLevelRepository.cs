@@ -13,7 +13,6 @@ namespace Archimedes.Service.Trade.Http
 {
     public class HttpPriceLevelRepository : IHttpPriceLevelRepository
     {
-
         private readonly ILogger<HttpPriceLevelRepository> _logger;
         private readonly HttpClient _client;
 
@@ -26,20 +25,29 @@ namespace Archimedes.Service.Trade.Http
         }
 
 
-        public async Task UpdatePriceLevel(PriceLevelDto priceLevel)
+        public async Task UpdatePriceLevel(PriceLevelDto level)
         {
-            var payload = new JsonContent(priceLevel);
+            var payload = new JsonContent(level);
 
             var response = await _client.PutAsync("price-level", payload);
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"POST Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
-                return;
+                if (response.RequestMessage != null)
+                    _logger.LogError($"POST Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
+            }
+        }
+
+        public async Task UpdatePriceLevels(List<PriceLevelDto> priceLevels)
+        {
+            foreach (var level in priceLevels)
+            {
+                await UpdatePriceLevel(level);
             }
 
-            _logger.LogInformation($"Added Trade {priceLevel}");
+            _logger.LogInformation($"UPDATED {priceLevels.Count} PriceLevel(s)");
         }
+        
 
         public async Task<List<PriceLevelDto>> GetPriceLevelsByMarketByFromDate(string market, DateTime fromDate)
         {
@@ -48,7 +56,8 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"GET Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
+                if (response.RequestMessage != null)
+                    _logger.LogError($"GET Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
                 return null;
             }
 
@@ -66,7 +75,8 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"GET Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
+                if (response.RequestMessage != null)
+                    _logger.LogError($"GET Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
                 return null;
             }
 
@@ -83,5 +93,7 @@ namespace Archimedes.Service.Trade.Http
 
             return priceLevelDto;
         }
+
+
     }
 }

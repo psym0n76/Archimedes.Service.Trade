@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Archimedes.Library.Logger;
+using Archimedes.Library.Message.Dto;
+using Archimedes.Library.Price;
 using Archimedes.Library.RabbitMq;
 using Microsoft.Extensions.Logging;
 
@@ -11,18 +15,41 @@ namespace Archimedes.Service.Price
         public event EventHandler<PriceMessageHandlerEventArgs> PriceMessageEventHandler; 
         private readonly IPriceFanoutConsumer _consumer;
         private readonly ILogger<PriceSubscriber> _logger;
+        private readonly IPriceAggregator _aggregator;
+        private readonly BatchLog _batchLog = new();
+        private string _logId;
 
-        public PriceSubscriber(IPriceFanoutConsumer consumer, ILogger<PriceSubscriber> logger)
+        public PriceSubscriber(IPriceFanoutConsumer consumer, ILogger<PriceSubscriber> logger, IPriceAggregator aggregator)
         {
             _consumer = consumer;
             _logger = logger;
+            _aggregator = aggregator;
             _consumer.HandleMessage += Consumer_HandleMessage;
         }
 
         private void Consumer_HandleMessage(object sender, PriceMessageHandlerEventArgs e)
         {
-            _logger.LogInformation($"Received Price Update {e.Message}");
-            PriceMessageEventHandler?.Invoke(sender, e);
+            _logId = _batchLog.Start();
+            
+            _aggregator.Add(e.Prices);
+
+            if (_aggregator.SendPrice())
+            {
+                AggregatePrice(sender, e);
+                _logger.LogInformation(_batchLog.Print(_logId));
+            }
+            
+        }
+
+        private void AggregatePrice(object sender, PriceMessageHandlerEventArgs e)
+        {
+            var prices = _aggregator.GetLowBidAndAskHigh();
+
+            _batchLog.Update(_logId,
+                $"Aggregating BidAsk from {_aggregator.AggregatorCount()} Prices Bid: {prices.Bid} Ask: {prices.Ask} {prices.TimeStamp}");
+
+            PriceMessageEventHandler?.Invoke(sender, new PriceMessageHandlerEventArgs() {Message = e.Message, Prices = new List<PriceDto> { prices}});
+
         }
 
         public Task Consume(CancellationToken cancellationToken)

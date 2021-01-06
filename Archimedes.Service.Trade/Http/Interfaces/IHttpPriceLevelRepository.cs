@@ -7,11 +7,12 @@ namespace Archimedes.Service.Trade.Http
 {
     public interface IHttpPriceLevelRepository
     {
-        Task UpdatePriceLevel(PriceLevelDto priceLevel);
+        Task UpdatePriceLevel(PriceLevelDto level);
 
         Task<List<PriceLevelDto>> GetPriceLevelsByMarketByFromDate(string market, DateTime fromDate);
         Task<List<PriceLevelDto>> GetPriceLevelsByMarketByGranularityByFromDate(string market, string granularity, DateTime fromDate);
 
         Task<List<PriceLevelDto>> GetPriceLevelCurrentAndPreviousDay(string market,string granularity);
+        Task UpdatePriceLevels(List<PriceLevelDto> priceLevels);
     }
 }

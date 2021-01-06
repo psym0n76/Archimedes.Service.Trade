@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace Archimedes.Service.Trade.Http
 {
-    public class HttpCandleRepository:IHttpCandleRepository
+    public class HttpCandleRepository: IHttpCandleRepository
     {
 
         private readonly ILogger<HttpCandleRepository> _logger;
@@ -25,15 +25,18 @@ namespace Archimedes.Service.Trade.Http
             _client = client;
         }
 
-
-        public async Task<List<CandleDto>> GetCandlesByMarketByFromDate(string market, DateTime fromDate)
+        public async Task<List<CandleDto>> GetCandlesByGranularityMarketByDate(string market, string granularity, DateTime startDate, DateTime endDate)
         {
-            var response = await _client.GetAsync($"candle/byMarket_byFromdate?market={market}&fromDate={fromDate:yyyy-MM-dd}");
+            var response = await _client.GetAsync($"candle/bymarket_bygranularity_fromdate_todate?market={market}&granularity={granularity}&fromdate={startDate}&todate={endDate}");
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"GET Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
-                return null;
+                var errorResponse = await response.Content.ReadAsAsync<string>();
+
+                if (response.RequestMessage != null)
+                    _logger.LogError(
+                        $"GET Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
+                return new List<CandleDto>();
             }
 
             var candles = await response.Content.ReadAsAsync<IEnumerable<CandleDto>>();

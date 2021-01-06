@@ -7,6 +7,9 @@ namespace Archimedes.Service.Trade.Http
 {
     public interface IHttpCandleRepository
     {
-        Task<List<CandleDto>> GetCandlesByMarketByFromDate(string market, DateTime fromDate);
+        //Task<List<CandleDto>> GetCandlesByMarketByFromDate(string market, DateTime fromDate);
+
+        Task<List<CandleDto>> GetCandlesByGranularityMarketByDate(string market, string granularity, DateTime startDate,
+            DateTime endDate);
     }
 }

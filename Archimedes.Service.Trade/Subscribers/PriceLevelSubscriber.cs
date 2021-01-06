@@ -22,8 +22,8 @@ namespace Archimedes.Service.Price
 
         private void Consumer_HandleMessage(object sender, PriceLevelMessageHandlerEventArgs e)
         {
-            _logger.LogInformation($"Received Price Level Update {e.Message}");
             PriceLevelMessageEventHandler?.Invoke(sender, e);
+            //_logger.LogInformation($"Success {counter}");
         }
 
 
