@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Archimedes.Service.Trade.Http;
@@ -91,7 +90,7 @@ namespace Archimedes.Service.Trade.Strategies
         private  void UpdatePriceLevelTable()
         {
             var cachePriceLevels = _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache).Result;
-            _priceLevelRepository.UpdatePriceLevels(cachePriceLevels).RunSynchronously();
+            _priceLevelRepository.UpdatePriceLevels(cachePriceLevels).ConfigureAwait(false);
 
             _batchLog.Update(_logId, "Updating PriceLevel Table");
         }
@@ -154,8 +153,7 @@ namespace Archimedes.Service.Trade.Strategies
                 }
 
                 _batchLog.Update(_logId, $"Candle(s) Loading...CandleLoader Count: {_loadedCandles.Count}");
-                _batchLog.Update(_logId,
-                    $"Candle(s) Loading...CandleHistoryLoader Count: {historyCandles.Count} COMPLETE");
+                _batchLog.Update(_logId, $"Candle(s) Loading...CandleHistoryLoader Count: {historyCandles.Count} COMPLETE");
                 _loadedCandles.Clear();
                 _loadedCandles.AddRange(historyCandles);
             }
