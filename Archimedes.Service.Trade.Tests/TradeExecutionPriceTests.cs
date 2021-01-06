@@ -59,11 +59,11 @@ namespace Archimedes.Service.Trade.Tests
 
 
 
-            var subject = new PriceTradeExecutor(mockLogger.Object, mockHttpClient.Object, mockTradeProfile.Object, mockCache.Object);
+            var subject = new PriceTradeExecutor(mockLogger.Object, mockHttpClient.Object,mockCache.Object);
 
             var price = new PriceDto() {Ask = 1.2999m, Bid = 1.2001m};
 
-            subject.Execute(price, "", 0.0000m);
+            subject.Execute(price, 0.0000m);
 
             mockHttpClient.Verify(a=>a.UpdatePriceLevel(It.IsAny<PriceLevelDto>()),Times.Exactly(2));
         }

@@ -24,27 +24,24 @@ namespace Archimedes.Service.Trade.Strategies
         private readonly BatchLog _batchLog = new();
         private string _logId;
 
-        private readonly ITradeProfileFactory _tradeProfileFactory;
-
         public PriceTradeExecutor(ILogger<PriceTradeExecutor> logger, IHttpPriceLevelRepository priceLevel,
-            ITradeProfileFactory tradeProfileFactory, ICacheManager cache)
+            ICacheManager cache)
         {
             _logger = logger;
             _priceLevel = priceLevel;
-            _tradeProfileFactory = tradeProfileFactory;
             _cache = cache;
         }
 
-        public void ExecuteLocked(PriceDto price, string tradeProfile, decimal tolerance)
+        public void ExecuteLocked(PriceDto price, decimal tolerance)
         {
             lock (_locker)
             {
                 _logId = _batchLog.Start();
-                Execute(price, tradeProfile, tolerance);
+                Execute(price, tolerance);
             }
         }
 
-        public async void Execute(PriceDto price, string tradeProfile, decimal tolerance)
+        public async void Execute(PriceDto price, decimal tolerance)
         {
             if (await ValidateLastPrice(price))
             {
@@ -53,7 +50,7 @@ namespace Archimedes.Service.Trade.Strategies
                 return;
             }
 
-            await ValidatePriceAgainstPriceLevel(price, tradeProfile, tolerance);
+            await ValidatePriceAgainstPriceLevel(price, tolerance);
             await UpdateLastPriceCache(price);
 
             _logger.LogInformation(_batchLog.Print(_logId));
@@ -74,7 +71,7 @@ namespace Archimedes.Service.Trade.Strategies
 
         }
 
-        private async Task ValidatePriceAgainstPriceLevel(PriceDto price, string tradeProfile, decimal tolerance)
+        private async Task ValidatePriceAgainstPriceLevel(PriceDto price, decimal tolerance)
         {
             _batchLog.Update(_logId, $"Bid: {price.Bid} Ask: {price.Ask} {price.TimeStamp}");
 
@@ -124,7 +121,7 @@ namespace Archimedes.Service.Trade.Strategies
 
         private void PrintPriceLevels(List<PriceLevelDto> priceLevels)
         {
-            foreach (var priceLevel in priceLevels.Where(WithinRangeAndActiveLevelUnbroken()))
+            foreach (var priceLevel in priceLevels.Where(level => level.OutsideOfRange == false && level.Active))
             {
                 PriceLevelLog(priceLevel);
             }

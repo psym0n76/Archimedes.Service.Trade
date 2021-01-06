@@ -67,7 +67,7 @@ namespace Archimedes.Service.Trade.Strategies
             _batchLog.Update(_logId,
                 $"Price Update Bid: {e.Prices[0].Bid} Ask: {e.Prices[0].Ask} {e.Prices[0].TimeStamp}");
 
-            _tradeExecutor.ExecuteLocked(e.Prices[0], _tradeProfile, ToleranceOnePip);
+            _tradeExecutor.ExecuteLocked(e.Prices[0], ToleranceOnePip);
             _batchLog.Update(_logId, $"Trade Executor [{_tradeProfile}]");
 
             _tradeValuation.UpdateTradeLocked(e.Prices[0]);
