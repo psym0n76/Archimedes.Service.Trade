@@ -6,6 +6,7 @@ namespace Archimedes.Service.Trade.Http
 {
     public interface IHttpTradeRepository
     {
-        Task AddTrade(List<TradeDto> trade);
+        Task AddTrades(List<TradeDto> trade);
+        Task UpdateTrade(TradeDto trade);
     }
 }

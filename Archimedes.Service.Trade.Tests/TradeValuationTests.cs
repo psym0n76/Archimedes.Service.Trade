@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
-using Archimedes.Library.Message.Dto;
+﻿using Archimedes.Library.Message.Dto;
+using Archimedes.Service.Trade.Http;
 using Archimedes.Service.Trade.Strategies;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NLog;
 using NUnit.Framework;
 
 namespace Archimedes.Service.Trade.Tests
@@ -30,9 +29,10 @@ namespace Archimedes.Service.Trade.Tests
         {
             var mockCacheTransaction = new Mock<ICacheManager>();
             var mockLogger = new Mock<ILogger<TradeValuation>>();
+            var mockReo = new Mock<IHttpTradeRepository>();
 
             //todo setup obejct
-            return new TradeValuation(mockCacheTransaction.Object, mockLogger.Object);
+            return new TradeValuation(mockCacheTransaction.Object, mockLogger.Object, mockReo.Object);
 
         }
     }

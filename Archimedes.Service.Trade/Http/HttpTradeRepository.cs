@@ -23,7 +23,7 @@ namespace Archimedes.Service.Trade.Http
             _client = client;
         }
 
-        public async Task AddTrade(List<TradeDto> trade)
+        public async Task AddTrades(List<TradeDto> trade)
         {
             var payload = new JsonContent(trade);
 
@@ -36,6 +36,21 @@ namespace Archimedes.Service.Trade.Http
             }
 
             _logger.LogInformation($"Added Trade {trade}");
+        }
+
+        public async Task UpdateTrade(TradeDto trade)
+        {
+            var payload = new JsonContent(trade);
+
+            var response = await _client.PutAsync("trade", payload);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"POST Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
+                return;
+            }
+
+            _logger.LogInformation($"Updated Trade {trade}");
         }
     }
 }

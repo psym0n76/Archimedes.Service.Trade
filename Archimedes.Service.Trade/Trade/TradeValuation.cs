@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Archimedes.Library.Logger;
 using Archimedes.Library.Message.Dto;
+using Archimedes.Service.Trade.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Archimedes.Service.Trade.Strategies
@@ -12,16 +13,17 @@ namespace Archimedes.Service.Trade.Strategies
         private const string TransactionCache = "transaction";
         private readonly object _locker = new object();
         private readonly ICacheManager _cache;
+        private readonly IHttpTradeRepository _tradeRepository;
         private readonly BatchLog _batchLog = new BatchLog();
         private string _logId;
         private readonly ILogger<TradeValuation> _logger;
 
-        public TradeValuation(ICacheManager cache, ILogger<TradeValuation> logger)
+        public TradeValuation(ICacheManager cache, ILogger<TradeValuation> logger, IHttpTradeRepository tradeRepository)
         {
             _cache = cache;
             _logger = logger;
+            _tradeRepository = tradeRepository;
         }
-
 
         public void UpdateTradeLocked(PriceDto price)
         {
@@ -29,10 +31,10 @@ namespace Archimedes.Service.Trade.Strategies
             {
                 try
                 {
-
-                    var id = System.Threading.Thread.CurrentThread.ManagedThreadId;
+                    //var id = System.Threading.Thread.CurrentThread.ManagedThreadId;
                     _logId = _batchLog.Start();
                     UpdateTrade(price);
+                    UpdateTradeTable();
                     _logger.LogInformation(_batchLog.Print(_logId));
                 }
                 catch (Exception e)
@@ -40,6 +42,28 @@ namespace Archimedes.Service.Trade.Strategies
                     _logger.LogError(_batchLog.Print(_logId, $"{e.Message} {e.StackTrace}"));
                 }
             }
+        }
+
+        private async void UpdateTradeTable()
+        {
+            var transactions = await _cache.GetAsync<List<Transaction>>(TransactionCache);
+
+            // map a transaction to a trade
+
+            foreach (var transaction in transactions)
+            {
+                foreach (var priceTarget in transaction.ProfitTargets)
+                {
+                    
+                }
+            }
+            
+            var trade = new TradeDto()
+            {
+                //Id = transactions[0].
+            };
+
+            await _tradeRepository.UpdateTrade(trade);
         }
 
 

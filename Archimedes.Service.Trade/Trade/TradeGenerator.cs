@@ -64,7 +64,7 @@ namespace Archimedes.Service.Trade.Strategies
                 })
                 .ToList();
 
-            _http.AddTrade(trades);
+            _http.AddTrades(trades);
         }
     }
 }
