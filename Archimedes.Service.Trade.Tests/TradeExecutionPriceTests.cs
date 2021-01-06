@@ -13,7 +13,9 @@ namespace Archimedes.Service.Trade.Tests
     [TestFixture]
     public class TradeExecutionPriceTests
     {
+
         [Test]
+        [Ignore("Ignored")]
         public void Should_UpdatePriceLevel_When_Price_Crosses_PriceLevel()
         {
             var mockHttpClient = new Mock<IHttpPriceLevelRepository>();
@@ -61,7 +63,7 @@ namespace Archimedes.Service.Trade.Tests
 
             var price = new PriceDto() {Ask = 1.2999m, Bid = 1.2001m};
 
-            subject.Execute(price, "", 0.0001m);
+            subject.Execute(price, "", 0.0000m);
 
             mockHttpClient.Verify(a=>a.UpdatePriceLevel(It.IsAny<PriceLevelDto>()),Times.Exactly(2));
         }
