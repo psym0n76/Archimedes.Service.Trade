@@ -119,6 +119,7 @@ namespace Archimedes.Service.Trade.Strategies
                 {
                     level.LevelBroken = true;
                     level.LevelBrokenDate = candle.TimeStamp;
+                    level.LastUpdated = DateTime.Now;
                     _batchLog.Update(_logId, $"LevelBroken: {level.LevelBroken} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }
@@ -133,6 +134,7 @@ namespace Archimedes.Service.Trade.Strategies
                 {
                     level.LevelBroken = true;
                     level.LevelBrokenDate = candle.TimeStamp;
+                    level.LastUpdated = DateTime.Now;
                     _batchLog.Update(_logId, $"LevelBroken: {level.LevelBroken} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }
@@ -147,6 +149,7 @@ namespace Archimedes.Service.Trade.Strategies
                 {
                     level.OutsideRange = true;
                     level.OutsideRangeDate = candle.TimeStamp;
+                    level.LastUpdated = DateTime.Now;
                     _batchLog.Update(_logId, $"OutsideRange: {level.OutsideRange} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }
@@ -161,6 +164,7 @@ namespace Archimedes.Service.Trade.Strategies
                 {
                     level.OutsideRange = true;
                     level.OutsideRangeDate = candle.TimeStamp;
+                    level.LastUpdated = DateTime.Now;
                     _batchLog.Update(_logId, $"OutsideRange: {level.OutsideRange} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }

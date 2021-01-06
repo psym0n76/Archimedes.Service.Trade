@@ -9,8 +9,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Archimedes.Service.Trade.Http;
 
 namespace Archimedes.Service.Trade.Strategies
 {
@@ -19,6 +21,7 @@ namespace Archimedes.Service.Trade.Strategies
         public event EventHandler<TradeMessageHandlerEventArgs> TradeMessageEventHandler;
         private readonly ILogger<BasicEngulfingCandleStrategy> _logger;
 
+        private readonly IHttpPriceLevelRepository _priceLevelRepository;
         private readonly ICandleSubscriber _candleSubscriber;
         private readonly ICandleLoader _candleLoader;
         private readonly ICandleHistoryLoader _historyLoader;
@@ -39,7 +42,7 @@ namespace Archimedes.Service.Trade.Strategies
         public BasicEngulfingCandleStrategy(ICandleSubscriber candleSubscriber,
             ILogger<BasicEngulfingCandleStrategy> logger,
             ICandleLoader candleLoader, ICacheManager cache, ITradeProfileFactory tradeProfileFactory,
-            ICandleHistoryLoader historyLoader)
+            ICandleHistoryLoader historyLoader, IHttpPriceLevelRepository priceLevelRepository)
         {
             _logger = logger;
             _cache = cache;
@@ -47,6 +50,7 @@ namespace Archimedes.Service.Trade.Strategies
             _candleLoader = candleLoader;
             _tradeProfileFactory = tradeProfileFactory;
             _historyLoader = historyLoader;
+            _priceLevelRepository = priceLevelRepository;
         }
 
         public void Consume(string market, string granularity, string tradeProfile, CancellationToken token)
@@ -73,6 +77,7 @@ namespace Archimedes.Service.Trade.Strategies
                 LoadCandlesInternal(e.Message.Market, "5Min", e.Message.StartDate);
                 LoadCandles();
                 ValidatePrice();
+                UpdatePriceLevelTable();
             }
             catch (Exception exception)
             {
@@ -81,6 +86,14 @@ namespace Archimedes.Service.Trade.Strategies
             }
 
             _logger.LogInformation(_batchLog.Print(_logId));
+        }
+
+        private  void UpdatePriceLevelTable()
+        {
+            var cachePriceLevels = _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache).Result;
+            _priceLevelRepository.UpdatePriceLevels(cachePriceLevels).RunSynchronously();
+
+            _batchLog.Update(_logId, "Updating PriceLevel Table");
         }
 
         public void LoadCandlesInternal(string market, string granularity, DateTime messageStartDate)
@@ -171,9 +184,9 @@ namespace Archimedes.Service.Trade.Strategies
 
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache);
 
-            foreach (var level in cachePriceLevels.Where(level =>
-                level.Active && level.LevelBroken && level.OutsideRange == false))
+            foreach (var level in cachePriceLevels.Where(WithinRangeAndActiveLevelBroken()))
             {
+                level.CandlesElapsedLevelBroken++;
                 BuyCandleClosedOutsideOfRange(level, lastCandle);
                 SellCandleClosedOutsideOfRange(level, lastCandle);
             }
@@ -240,6 +253,7 @@ namespace Archimedes.Service.Trade.Strategies
                     $"OutsideOfRange - SELL and LastCandleClose: {lastCandle.Close.Bid} > PriceLevel: {level.BidPriceRange} on {level.TimeStamp}");
                 level.OutsideRange = true;
                 level.OutsideRangeDate = lastCandle.TimeStamp;
+                level.LastUpdated = DateTime.Now;
             }
         }
 
@@ -251,10 +265,11 @@ namespace Archimedes.Service.Trade.Strategies
                     $"OutsideOfRange - BUY and LastCandleClose: {lastCandle.Close.Ask} < PriceLevel: {level.BidPriceRange} on {level.TimeStamp}");
                 level.OutsideRange = true;
                 level.OutsideRangeDate = lastCandle.TimeStamp;
+                level.LastUpdated = DateTime.Now;
             }
         }
 
-        private void ProcessEngulfCandle(Candle candle, PriceLevelDto priceLevelDto)
+        private void ProcessEngulfCandle(Candle candle, PriceLevelDto level)
         {
             try
             {
@@ -262,9 +277,10 @@ namespace Archimedes.Service.Trade.Strategies
                     $"ProcessEngulfCandle on CandleType: {candle.Type()}: BodyFillRate: {candle.BodyFillRate()} Color: {candle.Color()}");
 
                 if (candle.Type() == CandleType.Engulfing && candle.BodyFillRate() > 0.5m &&
-                    candle.Color() == priceLevelDto.BuySell.Color())
+                    candle.Color() == level.BuySell.Color())
                 {
-                    priceLevelDto.Trade = true;
+                    level.Trade = true;
+                    level.LastUpdated = DateTime.Now;
 
                     _batchLog.Update(_logId,
                         $"=======================================================================================================================");
@@ -275,7 +291,7 @@ namespace Archimedes.Service.Trade.Strategies
                     _batchLog.Update(_logId,
                         $"ProcessEngulfCandle  CONFIRMED ENGULFING- {DateTime.Now} {candle.Market} 5Min EntryPrice = {candle.Fibonacci382()} {candle.Fibonacci382()}");
 
-                    BuildTradeEvent(priceLevelDto.BuySell, candle);
+                    BuildTradeEvent(level.BuySell, candle);
                 }
             }
             catch (Exception e)
