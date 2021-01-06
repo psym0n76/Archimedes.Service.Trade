@@ -205,7 +205,7 @@ namespace Archimedes.Service.Trade.Strategies
         {
             _batchLog.Update(_logId,
                 $"{priceLevel.Strategy.PadRight(13, ' ')}" + BidRangeFormat(priceLevel) +
-                $"Active: {priceLevel.Active} Broken: {priceLevel.LevelBroken} {priceLevel.LevelBrokenDate} Outside: {priceLevel.OutsideRange} Timestamp: {priceLevel.TimeStamp} ");
+                $"Active: {priceLevel.Active,7} Broken: {priceLevel.LevelBroken,-7} {priceLevel.LevelBrokenDate} Outside: {priceLevel.OutsideRange} Timestamp: {priceLevel.TimeStamp} ");
         }
 
         private static string BidRangeFormat(PriceLevelDto priceLevel)
