@@ -64,7 +64,7 @@ namespace Archimedes.Service.Trade.Strategies
 
             await _repository.UpdatePriceLevels(priceLevels);
 
-            _logger.LogInformation(_batchLog.Print(_logId,$"Unbroken Levels remaining {priceLevels.Count(a => a.LevelBroken == false && a.OutsideOfRange == false)} / {priceLevels.Count}"));
+            _logger.LogInformation(_batchLog.Print(_logId,$"Unbroken Levels remaining {priceLevels.Count(a => a.LevelBroken == false && a.OutsideRange == false)} / {priceLevels.Count}"));
         }
 
         private void ScanPriceLevelsAgainstCandles(List<PriceLevelDto> priceLevels, List<CandleDto> candles)
@@ -79,12 +79,11 @@ namespace Archimedes.Service.Trade.Strategies
         private static string Message(PriceLevelDto level)
         {
             return
-                $"PriceLevel {level.Strategy.PadRight(12, ' ')} Bid: {Math.Round(level.BidPrice, 4)} Range: {Math.Round(level.BidPriceRange, 4)} Broken: {level.LevelBroken,-5} OutsideRange: {level.OutsideOfRange, -6} {level.TimeStamp}";
+                $"PriceLevel {level.Strategy.PadRight(12, ' ')} Bid: {Math.Round(level.BidPrice, 4)} Range: {Math.Round(level.BidPriceRange, 4)} Broken: {level.LevelBroken,-5} OutsideRange: {level.OutsideRange, -6} {level.TimeStamp}";
         }
 
         private void IsPriceLevelBroken(List<CandleDto> candles, PriceLevelDto level)
         {
-
             var pivots = int.Parse(level.Strategy.Substring(level.Strategy.Length - 1));
 
             foreach (var candle in candles)
@@ -105,8 +104,7 @@ namespace Archimedes.Service.Trade.Strategies
                     }
                 }
 
-
-                if (level.LevelBroken && level.OutsideOfRange)
+                if (level.LevelBroken && level.OutsideRange)
                 {
                     break;
                 }
@@ -120,6 +118,7 @@ namespace Archimedes.Service.Trade.Strategies
                 if (candle.AskLow < level.AskPrice)
                 {
                     level.LevelBroken = true;
+                    level.LevelBrokenDate = candle.TimeStamp;
                     _batchLog.Update(_logId, $"LevelBroken: {level.LevelBroken} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }
@@ -133,6 +132,7 @@ namespace Archimedes.Service.Trade.Strategies
                 if (candle.BidHigh > level.BidPrice)
                 {
                     level.LevelBroken = true;
+                    level.LevelBrokenDate = candle.TimeStamp;
                     _batchLog.Update(_logId, $"LevelBroken: {level.LevelBroken} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }
@@ -141,12 +141,13 @@ namespace Archimedes.Service.Trade.Strategies
 
         private void SellOutsideRange(PriceLevelDto level, CandleDto candle)
         {
-            if (level.OutsideOfRange == false && level.LevelBroken)
+            if (level.OutsideRange == false && level.LevelBroken)
             {
                 if (candle.BidHigh > level.BidPriceRange)
                 {
-                    level.OutsideOfRange = true;
-                    _batchLog.Update(_logId, $"OutsideRange: {level.OutsideOfRange} at {candle.TimeStamp}");
+                    level.OutsideRange = true;
+                    level.OutsideOfRangeDate = candle.TimeStamp;
+                    _batchLog.Update(_logId, $"OutsideRange: {level.OutsideRange} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }
             }
@@ -154,12 +155,13 @@ namespace Archimedes.Service.Trade.Strategies
 
         private void BuyOutsideRange(PriceLevelDto level, CandleDto candle)
         {
-            if (level.OutsideOfRange == false && level.LevelBroken)
+            if (level.OutsideRange == false && level.LevelBroken)
             {
                 if (candle.AskLow < level.AskPriceRange)
                 {
-                    level.OutsideOfRange = true;
-                    _batchLog.Update(_logId, $"OutsideRange: {level.OutsideOfRange} at {candle.TimeStamp}");
+                    level.OutsideRange = true;
+                    level.OutsideOfRangeDate = candle.TimeStamp;
+                    _batchLog.Update(_logId, $"OutsideRange: {level.OutsideRange} at {candle.TimeStamp}");
                     _batchLog.Update(_logId, $"{Message(level)}");
                 }
             }

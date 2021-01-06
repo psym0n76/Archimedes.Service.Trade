@@ -109,7 +109,7 @@ namespace Archimedes.Service.Trade.Strategies
 
         private static Func<PriceLevelDto, bool> WithinRangeAndActiveLevelUnbroken()
         {
-            return level => level.OutsideOfRange == false && level.Active && level.LevelBroken == false;
+            return level => level.OutsideRange == false && level.Active && level.LevelBroken == false;
         }
 
         private async Task UpdatePriceLevelTable(PriceLevelDto priceLevel)
@@ -121,7 +121,7 @@ namespace Archimedes.Service.Trade.Strategies
 
         private void PrintPriceLevels(List<PriceLevelDto> priceLevels)
         {
-            foreach (var priceLevel in priceLevels.Where(level => level.OutsideOfRange == false && level.Active))
+            foreach (var priceLevel in priceLevels.Where(level => level.OutsideRange == false && level.Active))
             {
                 PriceLevelLog(priceLevel);
             }
@@ -131,7 +131,7 @@ namespace Archimedes.Service.Trade.Strategies
         {
             _batchLog.Update(_logId,
                 $"{priceLevel.Strategy.PadRight(13, ' ')}" + BidRangeFormat(priceLevel) +
-                $"Type: {priceLevel.CandleType} {priceLevel.Granularity}  Active: {priceLevel.Active} LevelBroken: {priceLevel.LevelBroken} OutsideRange: {priceLevel.OutsideOfRange} Timestamp: {priceLevel.TimeStamp} ");
+                $"Active: {priceLevel.Active} Broken: {priceLevel.LevelBroken} {priceLevel.LevelBrokenDate} Outside: {priceLevel.OutsideRange} Timestamp: {priceLevel.TimeStamp} ");
         }
 
 
@@ -190,7 +190,7 @@ namespace Archimedes.Service.Trade.Strategies
 
         private void RaiseTradeEvent(PriceLevelDto priceLevel)
         {
-            priceLevel.LastLevelBrokenDate = DateTime.Now;
+            priceLevel.LevelBrokenDate = DateTime.Now;
             priceLevel.LevelsBroken++;
             priceLevel.LevelBroken = true;
 
