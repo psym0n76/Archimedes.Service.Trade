@@ -45,6 +45,12 @@ namespace Archimedes.Service.Price
         private async Task InitialLoad(string market, string granularity)
         {
             var priceLevels = await _priceLevel.LoadAsync(market, granularity);
+
+            if (!priceLevels.Any())
+            {
+                _batchLog.Update(_logId, $"WARNING Missing PriceLevel(s)");
+            }
+
             _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) returned from Table");
 
             await _cache.SetAsync(PriceLevelCache, priceLevels);

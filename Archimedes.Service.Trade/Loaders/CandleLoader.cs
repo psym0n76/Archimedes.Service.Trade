@@ -30,7 +30,7 @@ namespace Archimedes.Service.Trade
             catch (Exception a)
             {
                 _logger.LogError($"Error returned from Candle repository {market} {a.Message} {a.StackTrace}");
-                throw;
+                return new List<CandleDto>();
             }
         }
 
@@ -48,7 +48,7 @@ namespace Archimedes.Service.Trade
             catch (Exception a)
             {
                 _logger.LogError($"Error returned from Candle Table {market} {a.Message} {a.StackTrace}");
-                throw;
+                return new List<CandleDto>();
             }
         }
 

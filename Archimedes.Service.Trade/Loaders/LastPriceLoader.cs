@@ -27,7 +27,7 @@ namespace Archimedes.Service.Trade
             catch (Exception a)
             {
                 _logger.LogError($"Error returned from Price repository {market} {a.Message} {a.StackTrace}");
-                throw;
+                return new PriceDto();
             }
         }
 

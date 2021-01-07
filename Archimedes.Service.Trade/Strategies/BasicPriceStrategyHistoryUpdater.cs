@@ -36,6 +36,7 @@ namespace Archimedes.Service.Trade.Strategies
             try
             {
                 UpdateHistoryAsync(market, granularity).GetAwaiter().GetResult();
+                _logger.LogInformation(_batchLog.Print(_logId));
             }
 
             catch (Exception e)
@@ -50,6 +51,13 @@ namespace Archimedes.Service.Trade.Strategies
         {
             
             var priceLevels = await _priceLevel.LoadAsync(market, granularity);
+
+            if (!priceLevels.Any())
+            {
+                _batchLog.Update(_logId, $"WARNING Missing PriceLevel(s)");
+                return;
+            }
+            
             var minDate = priceLevels.Min(a => a.TimeStamp);
 
             _batchLog.Update(_logId, $"PriceLevel Range: {minDate} to {priceLevels.Max(a => a.TimeStamp)}");
@@ -64,7 +72,7 @@ namespace Archimedes.Service.Trade.Strategies
 
             await _repository.UpdatePriceLevels(priceLevels);
 
-            _logger.LogInformation(_batchLog.Print(_logId,$"Unbroken Levels remaining {priceLevels.Count(a => a.LevelBroken == false && a.OutsideRange == false)} / {priceLevels.Count}"));
+            _batchLog.Update(_logId,$"Unbroken Levels remaining {priceLevels.Count(a => a.LevelBroken == false && a.OutsideRange == false)} / {priceLevels.Count}");
         }
 
         private void ScanPriceLevelsAgainstCandles(List<PriceLevelDto> priceLevels, List<CandleDto> candles)
