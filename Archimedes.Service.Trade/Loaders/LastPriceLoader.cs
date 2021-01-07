@@ -37,7 +37,7 @@ namespace Archimedes.Service.Trade
 
             if (price.Ask == 0m && price.Bid == 0m)
             {
-                _logger.LogError($"LastPrice missing {market} Bid: {price.Bid} Ask: {price.Ask}");
+                _logger.LogWarning($"LastPrice missing {market} Bid: {price.Bid} Ask: {price.Ask}");
             }
             
             return price;
