@@ -52,7 +52,6 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-
                 var errorResponse = await response.Content.ReadAsAsync<PriceDto>();
 
                 if (response.RequestMessage != null)
