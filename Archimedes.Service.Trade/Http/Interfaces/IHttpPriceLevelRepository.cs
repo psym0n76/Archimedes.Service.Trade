@@ -13,6 +13,6 @@ namespace Archimedes.Service.Trade.Http
         Task<List<PriceLevelDto>> GetPriceLevelsByMarketByGranularityByFromDate(string market, string granularity, DateTime fromDate);
 
         Task<List<PriceLevelDto>> GetPriceLevelCurrentAndPreviousDay(string market,string granularity);
-        Task UpdatePriceLevels(List<PriceLevelDto> priceLevels);
+        Task UpdatePriceLevels(List<PriceLevelDto> levels);
     }
 }

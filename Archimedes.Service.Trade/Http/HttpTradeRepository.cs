@@ -28,14 +28,18 @@ namespace Archimedes.Service.Trade.Http
             var payload = new JsonContent(trade);
 
             var response = await _client.PostAsync("trade", payload);
-
+            
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"POST Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
+                var errorResponse = await response.Content.ReadAsAsync<string>();
+
+                if (response.RequestMessage != null)
+                    _logger.LogError(
+                        $"POST Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
                 return;
             }
 
-            _logger.LogInformation($"Added Trade {trade}");
+            _logger.LogInformation($"Added Trade {trade[0].Strategy} {trade[0].BuySell} {trade[0].TargetPrice}");
         }
 
         public async Task UpdateTrade(TradeDto trade)
@@ -46,11 +50,15 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"POST Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
+                var errorResponse = await response.Content.ReadAsAsync<string>();
+
+                if (response.RequestMessage != null)
+                    _logger.LogError(
+                        $"PUT Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
                 return;
             }
 
-            _logger.LogInformation($"Updated Trade {trade}");
+            _logger.LogInformation($"Updated Trade {trade.Strategy} {trade.BuySell} {trade.EntryPrice}");
         }
-    }
+     }
 }

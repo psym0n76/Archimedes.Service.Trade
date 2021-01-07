@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Archimedes.Library.Domain;
@@ -39,9 +38,7 @@ namespace Archimedes.Service.Trade.Http
                 return new List<CandleDto>();
             }
 
-            var candles = await response.Content.ReadAsAsync<IEnumerable<CandleDto>>();
-
-            return candles.ToList();
+            return await response.Content.ReadAsAsync<List<CandleDto>>();
         }
     }
 }

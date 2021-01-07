@@ -34,13 +34,15 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"GET Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
-                return null;
+                var errorResponse = await response.Content.ReadAsAsync<string>();
+
+                if (response.RequestMessage != null)
+                    _logger.LogError(
+                        $"GET Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
+                return new List<PriceDto>();
             }
 
-            var priceLevels = await response.Content.ReadAsAsync<IEnumerable<PriceDto>>();
-
-            return priceLevels.ToList();
+            return await response.Content.ReadAsAsync<List<PriceDto>>();
         }
 
         public async Task<PriceDto> GetLastPriceByMarket(string market)
@@ -51,13 +53,16 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"GET Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
-                return null;
+                var errorResponse = await response.Content.ReadAsAsync<string>();
+
+                if (response.RequestMessage != null)
+                    _logger.LogError(
+                        $"GET Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
+                
+                return new PriceDto();
             }
 
-            var price = await response.Content.ReadAsAsync<PriceDto>();
-
-            return price;
+            return await response.Content.ReadAsAsync<PriceDto>();
         }
     }
 }

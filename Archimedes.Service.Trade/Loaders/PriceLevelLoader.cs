@@ -40,7 +40,8 @@ namespace Archimedes.Service.Trade
 
             if (!priceLevels.Any())
             {
-                _logger.LogError($"PriceLevel missing {market}");
+                _logger.LogError($"PriceLevel missing {market} {granularity}");
+                return new List<PriceLevelDto>();
             }
             
             return priceLevels;

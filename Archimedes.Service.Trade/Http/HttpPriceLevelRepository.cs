@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Archimedes.Library.Domain;
@@ -16,7 +15,8 @@ namespace Archimedes.Service.Trade.Http
         private readonly ILogger<HttpPriceLevelRepository> _logger;
         private readonly HttpClient _client;
 
-        public HttpPriceLevelRepository(IOptions<Config> config, ILogger<HttpPriceLevelRepository> logger, HttpClient client)
+        public HttpPriceLevelRepository(IOptions<Config> config, ILogger<HttpPriceLevelRepository> logger,
+            HttpClient client)
         {
             client.BaseAddress = new Uri($"{config.Value.ApiRepositoryUrl}");
             client.DefaultRequestHeaders.Add("Accept", "application/json");
@@ -24,6 +24,15 @@ namespace Archimedes.Service.Trade.Http
             _client = client;
         }
 
+        public async Task UpdatePriceLevels(List<PriceLevelDto> levels)
+        {
+            foreach (var level in levels)
+            {
+                await UpdatePriceLevel(level);
+            }
+
+            _logger.LogInformation($"Updated {levels.Count} PriceLevel(s)");
+        }
 
         public async Task UpdatePriceLevel(PriceLevelDto level)
         {
@@ -33,21 +42,16 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
+                var errorResponse = await response.Content.ReadAsAsync<string>();
+
                 if (response.RequestMessage != null)
-                    _logger.LogError($"PUT Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
-            }
-        }
-
-        public async Task UpdatePriceLevels(List<PriceLevelDto> priceLevels)
-        {
-            foreach (var level in priceLevels)
-            {
-                await UpdatePriceLevel(level);
+                    _logger.LogError(
+                        $"PUT Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
+                return;
             }
 
-            _logger.LogInformation($"UPDATED {priceLevels.Count} PriceLevel(s)");
+            _logger.LogInformation($"Updated PriceLevel {level.Strategy} {level.BuySell} {level.TimeStamp}");
         }
-        
 
         public async Task<List<PriceLevelDto>> GetPriceLevelsByMarketByFromDate(string market, DateTime fromDate)
         {
@@ -56,16 +60,24 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
+                var errorResponse = await response.Content.ReadAsAsync<string>();
+
                 if (response.RequestMessage != null)
-                    _logger.LogError($"GET Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
-                return null;
+                    _logger.LogError(
+                        $"GET Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
+
+                return new List<PriceLevelDto>();
             }
 
-            var priceLevels = await response.Content.ReadAsAsync<IEnumerable<PriceLevelDto>>();
-
-            return priceLevels.ToList();
+            return await response.Content.ReadAsAsync<List<PriceLevelDto>>();
         }
 
+        public async Task<List<PriceLevelDto>> GetPriceLevelCurrentAndPreviousDay(string market, string granularity)
+        {
+            return await GetPriceLevelsByMarketByGranularityByFromDate(market, granularity,
+                DateTime.Today.PreviousWorkDay().AddDays(-1));
+        }
+        
         public async Task<List<PriceLevelDto>> GetPriceLevelsByMarketByGranularityByFromDate(string market,
             string granularity, DateTime fromDate)
         {
@@ -75,25 +87,16 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
+                var errorResponse = await response.Content.ReadAsAsync<string>();
+
                 if (response.RequestMessage != null)
-                    _logger.LogError($"GET Failed: {response.ReasonPhrase} from {response.RequestMessage.RequestUri}");
-                return null;
+                    _logger.LogError(
+                        $"GET Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
+
+                return new List<PriceLevelDto>();
             }
 
-            var priceLevels = await response.Content.ReadAsAsync<IEnumerable<PriceLevelDto>>();
-
-            return priceLevels.ToList();
+            return await response.Content.ReadAsAsync<List<PriceLevelDto>>();
         }
-
-        public async Task<List<PriceLevelDto>> GetPriceLevelCurrentAndPreviousDay(string market, string granularity)
-        {
-            var priceLevelDto =
-                await GetPriceLevelsByMarketByGranularityByFromDate(market, granularity,
-                    DateTime.Today.PreviousWorkDay().AddDays(-1));
-
-            return priceLevelDto;
-        }
-
-
     }
 }
