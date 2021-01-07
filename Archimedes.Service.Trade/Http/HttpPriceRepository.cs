@@ -12,7 +12,6 @@ namespace Archimedes.Service.Trade.Http
 {
     public class HttpPriceRepository : IHttpPriceRepository
     {
-
         private readonly ILogger<HttpPriceRepository> _logger;
         private readonly HttpClient _client;
 
@@ -23,7 +22,6 @@ namespace Archimedes.Service.Trade.Http
             _logger = logger;
             _client = client;
         }
-
 
         public async Task<List<PriceDto>> GetPricesByMarketByFromDate(string market, string granularity, DateTime fromDate)
         {

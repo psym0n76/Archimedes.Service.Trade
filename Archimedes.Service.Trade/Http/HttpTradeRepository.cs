@@ -35,7 +35,7 @@ namespace Archimedes.Service.Trade.Http
 
                 if (response.RequestMessage != null)
                     _logger.LogError(
-                        $"POST Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
+                        $"GET Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
                 return;
             }
 
@@ -54,7 +54,7 @@ namespace Archimedes.Service.Trade.Http
 
                 if (response.RequestMessage != null)
                     _logger.LogError(
-                        $"PUT Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
+                        $"PUT Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
                 return;
             }
 

@@ -98,7 +98,7 @@ namespace Archimedes.Service.Trade.Strategies
         public void LoadCandlesInternal(string market, string granularity, DateTime messageStartDate)
         {
 
-            var candles = _candleLoader.LoadPreviousFiveCandlesAsync(market, granularity, messageStartDate)
+            var candles = _candleLoader.LoadCandlesPreviousFiveAsync(market, granularity, messageStartDate)
                 .Result; // need to wait for this response
 
             if (!candles.Any())

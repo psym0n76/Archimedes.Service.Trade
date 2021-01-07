@@ -11,7 +11,6 @@ namespace Archimedes.Service.Trade
 {
     public class CandleLoader : ICandleLoader
     {
-
         private readonly IHttpCandleRepository _candle;
         private readonly ILogger<CandleLoader> _logger;
 
@@ -29,41 +28,26 @@ namespace Archimedes.Service.Trade
             }
             catch (Exception a)
             {
-                _logger.LogError($"Error returned from Candle repository {market} {a.Message} {a.StackTrace}");
+                _logger.LogError($"Error returned from Candle Repository {market} \n\nErrorMessage: {a.Message} \n\nStackTrace: {a.StackTrace}");
                 return new List<CandleDto>();
             }
         }
-
-        public async Task<List<CandleDto>> LoadPreviousFiveCandlesAsync(string market, string granularity,
+        
+        
+        public async Task<List<CandleDto>> LoadCandlesPreviousFiveAsync(string market, string granularity,
             DateTime messageStartDate)
         {
-            try
-            {
-                var interval = granularity.ExtractTimeInterval();
-                
-                var candles =  await LoadCandles(market, granularity, messageStartDate.AddMinutes(-5 * interval));
-
-                return candles;
-            }
-            catch (Exception a)
-            {
-                _logger.LogError($"Error returned from Candle Table {market} {a.Message} {a.StackTrace}");
-                return new List<CandleDto>();
-            }
+            return await LoadAsync(market, granularity, messageStartDate.AddMinutes(-5 * granularity.ExtractTimeInterval()));
         }
+
 
         private async Task<List<CandleDto>> LoadCandles(string market, string granularity, DateTime startDate)
         {
             var candles = await _candle.GetCandlesByGranularityMarketByDate(market, granularity, startDate, DateTime.Now.AddDays(1));
-
-            if (!candles.Any())
-            {
-                _logger.LogError($"No Candles returned from Table for {market} {granularity} from {startDate}");
-            }
-
+            
             if (candles.Count() < 3)
             {
-                _logger.LogError($"Only {candles.Count} Candle(s) returned from Table for {market} {granularity} from {startDate} - should be 5");
+                _logger.LogWarning($"Only {candles.Count} Candle(s) returned from Repository for {market} {granularity} from {startDate} - should be 5");
             }
 
             return candles;

@@ -5,13 +5,11 @@ using System.Threading.Tasks;
 using Archimedes.Library.Message.Dto;
 using Archimedes.Service.Trade.Http;
 using Microsoft.Extensions.Logging;
-using NLog;
 
 namespace Archimedes.Service.Trade
 {
     public class PriceLevelLoader : IPriceLevelLoader
     {
-
         private readonly IHttpPriceLevelRepository _priceLevel;
         private readonly ILogger<PriceLevelLoader> _logger;
 
@@ -40,8 +38,7 @@ namespace Archimedes.Service.Trade
 
             if (!priceLevels.Any())
             {
-                _logger.LogError($"PriceLevel missing {market} {granularity}");
-                return new List<PriceLevelDto>();
+                _logger.LogWarning($"PriceLevel missing {market} {granularity}");
             }
             
             return priceLevels;

@@ -8,6 +8,6 @@ namespace Archimedes.Service.Trade
     public interface ICandleLoader
     {
         Task<List<CandleDto>> LoadAsync(string market, string granularity, DateTime startDate);
-        Task<List<CandleDto>> LoadPreviousFiveCandlesAsync(string market, string granularity, DateTime messageStartDate);
+        Task<List<CandleDto>> LoadCandlesPreviousFiveAsync(string market, string granularity, DateTime messageStartDate);
     }
 }
