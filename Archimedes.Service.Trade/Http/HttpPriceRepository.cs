@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Archimedes.Library.Domain;
@@ -34,7 +33,7 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorResponse = await response.Content.ReadAsAsync<string>();
+                var errorResponse = response.Content;
 
                 if (response.RequestMessage != null)
                     _logger.LogError(
@@ -53,7 +52,8 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorResponse = await response.Content.ReadAsAsync<string>();
+
+                var errorResponse = response.Content;
 
                 if (response.RequestMessage != null)
                     _logger.LogError(
