@@ -34,7 +34,7 @@ namespace Archimedes.Service.Trade.Strategies
                     //var id = System.Threading.Thread.CurrentThread.ManagedThreadId;
                     _logId = _batchLog.Start();
                     UpdateTrade(price);
-                    UpdateTradeTable();
+                    //UpdateTradeTable();
                     _logger.LogInformation(_batchLog.Print(_logId));
                 }
                 catch (Exception e)
