@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Archimedes.Library;
 using Archimedes.Library.Logger;
 using Archimedes.Library.Message;
 using Archimedes.Library.Message.Dto;
@@ -47,21 +48,21 @@ namespace Archimedes.Service.Trade.Strategies
                 catch (Exception a)
                 {
                     _logger.LogError(_batchLog.Print(_logId,
-                        $"Error returned from TradeGenerator Transaction: {e.Transaction.BuySell} : {e.Transaction.Market} {e.Transaction.EntryPrice}", a));
+                        $"Error returned from TradeGenerator Transaction: {e.Transaction} : {e.Transaction.Market} {e.Transaction.EntryPrice}",a));
                 }
             }
         }
 
-        private void PublishTradeToQueue(Transaction transaction)
+        private void PublishTradeToQueue(TradeTransaction transaction)
         {
             _producer.PublishMessage(new TradeMessage(), "TradeRequest");
             _batchLog.Update(_logId,
                 $"Published to TradeRequest Queue {transaction.BuySell} : {transaction.Market} {transaction.EntryPrice}");
         }
 
-        private async void AddTradeToCache(Transaction transaction)
+        private async void AddTradeToCache(TradeTransaction transaction)
         {
-            var transactions = await _cache.GetAsync<List<Transaction>>(TransactionCache);
+            var transactions = await _cache.GetAsync<List<TradeTransaction>>(TransactionCache);
 
             transactions.Add(transaction);
 
@@ -70,7 +71,7 @@ namespace Archimedes.Service.Trade.Strategies
                 $"Added to Transaction Cache {transaction.BuySell} : {transaction.Market} {transaction.EntryPrice}");
         }
 
-        public void AddTradeToTable(Transaction transaction)
+        public void AddTradeToTable(TradeTransaction transaction)
         {
             var trades = transaction.ProfitTargets.Select(profitTarget => new TradeDto()
                 {

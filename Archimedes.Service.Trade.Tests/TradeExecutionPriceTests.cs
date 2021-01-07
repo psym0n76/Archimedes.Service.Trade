@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
+using System.Transactions;
+using Archimedes.Library;
 using Archimedes.Library.Message.Dto;
 using Archimedes.Service.Trade.Http;
 using Archimedes.Service.Trade.Strategies;
-using Archimedes.Service.Trade.Trade;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -29,7 +29,7 @@ namespace Archimedes.Service.Trade.Tests
                 BuySell = ""
             };
 
-            var trans = new Transaction(p)
+            var trans = new TradeTransaction(p)
             {
                 Closed = false
             };

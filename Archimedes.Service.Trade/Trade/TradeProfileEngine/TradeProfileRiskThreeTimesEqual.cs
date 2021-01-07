@@ -1,11 +1,11 @@
-﻿using Archimedes.Library.Message.Dto;
-using Archimedes.Service.Trade.Trade;
+﻿using Archimedes.Library;
+using Archimedes.Library.Message.Dto;
 
 namespace Archimedes.Service.Trade.Strategies
 {
     public class TradeProfileRiskThreeTimesEqual : ITradeProfile
     {
-        public Transaction Generate(PriceDto price, string buySell)
+        public TradeTransaction Generate(PriceDto price, string buySell)
         {
             var tradeParams = new TradeParameters()
             {
@@ -18,7 +18,7 @@ namespace Archimedes.Service.Trade.Strategies
                 Market = price.Market
             };
 
-            return new Transaction(tradeParams);
+            return new TradeTransaction(tradeParams);
 
         }
     }

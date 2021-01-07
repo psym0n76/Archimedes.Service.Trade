@@ -81,7 +81,7 @@ namespace Archimedes.Service.Trade.Strategies
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(CacheName);
 
             _batchLog.Update(_logId,
-                $"Validate Bid: {price.Bid} Ask: {price.Ask} against {cachePriceLevels.Where(WithinRangeAndActiveLevelUnbroken()).Count()} PriceLevel(s)");
+                $"Validate Price against {cachePriceLevels.Where(WithinRangeAndActiveLevelUnbroken()).Count()} PriceLevel(s)");
 
             PrintPriceLevels(cachePriceLevels);
 

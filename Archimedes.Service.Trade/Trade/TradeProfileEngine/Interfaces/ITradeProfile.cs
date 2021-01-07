@@ -1,9 +1,10 @@
-﻿using Archimedes.Library.Message.Dto;
+﻿using Archimedes.Library;
+using Archimedes.Library.Message.Dto;
 
 namespace Archimedes.Service.Trade.Strategies
 {
     public interface ITradeProfile
     {
-        Transaction Generate(PriceDto price, string buySell);
+        TradeTransaction Generate(PriceDto price, string buySell);
     }
 }

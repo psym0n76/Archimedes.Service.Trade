@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Archimedes.Library.RabbitMq;
+using System;
 using System.Threading;
 
 namespace Archimedes.Service.Trade.Strategies

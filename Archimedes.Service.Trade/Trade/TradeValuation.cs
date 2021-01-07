@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Archimedes.Library;
 using Archimedes.Library.Logger;
 using Archimedes.Library.Message.Dto;
 using Archimedes.Service.Trade.Http;
@@ -47,7 +48,7 @@ namespace Archimedes.Service.Trade.Strategies
 
         private async void UpdateTradeTable()
         {
-            var transactions = await _cache.GetAsync<List<Transaction>>(TransactionCache);
+            var transactions = await _cache.GetAsync<List<TradeTransaction>>(TransactionCache);
 
             // map a transaction to a trade
 
@@ -70,7 +71,7 @@ namespace Archimedes.Service.Trade.Strategies
 
         public async void UpdateTrade(PriceDto price)
         {
-            var transactions = await _cache.GetAsync<List<Transaction>>(TransactionCache);
+            var transactions = await _cache.GetAsync<List<TradeTransaction>>(TransactionCache);
 
             if (transactions == null)
             {

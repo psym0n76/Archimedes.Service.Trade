@@ -1,4 +1,6 @@
-﻿namespace Archimedes.Service.Trade.Strategies
+﻿using Archimedes.Library.RabbitMq;
+
+namespace Archimedes.Service.Trade.Strategies
 {
     public interface ITradeGenerator
     {

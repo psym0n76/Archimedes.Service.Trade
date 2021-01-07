@@ -1,4 +1,4 @@
-﻿using Archimedes.Service.Trade.Trade;
+﻿using Archimedes.Library;
 using NUnit.Framework;
 
 namespace Archimedes.Service.Trade.Tests
@@ -57,7 +57,7 @@ namespace Archimedes.Service.Trade.Tests
         }
 
 
-        private static Transaction GetSellTrade()
+        private static TradeTransaction GetSellTrade()
         {
             var tradeParams = new TradeParameters()
             {
@@ -69,7 +69,7 @@ namespace Archimedes.Service.Trade.Tests
                 TradeCounter = 3
             };
 
-            return new Transaction(tradeParams);
+            return new TradeTransaction(tradeParams);
         }
     }
 }

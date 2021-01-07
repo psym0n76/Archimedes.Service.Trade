@@ -8,7 +8,7 @@ namespace Archimedes.Service.Trade.Tests
         [Test]
         public void Should_Set_Trade_To_Closed_When_Target_Profit_Hit()
         {
-            var priceTarget = new TransactionPriceTarget()
+            var priceTarget = new TransactionPriceTargetDto()
             {
                 EntryPrice = 1.31m,
                 TargetPrice = 1.32m,
@@ -23,7 +23,7 @@ namespace Archimedes.Service.Trade.Tests
         [Test]
         public void Should_Set_Trade_To_Closed_When_Close_Price_Hit()
         {
-            var priceTarget = new TransactionPriceTarget()
+            var priceTarget = new TransactionPriceTargetDto()
             {
                 EntryPrice = 1.31m,
                 TargetPrice = 1.30m,
@@ -33,7 +33,5 @@ namespace Archimedes.Service.Trade.Tests
             priceTarget.UpdateTrade(new PriceDto(){Ask = 1.29m});
             Assert.AreEqual(true,priceTarget.Closed);
         }
-
-
     }
 }
