@@ -17,7 +17,7 @@ namespace Archimedes.Service.Price
         {
             _consumer = consumer;
             _logger = logger;
-            _consumer.HandleMessage += Consumer_HandleMessage; ;
+            _consumer.HandleMessage += Consumer_HandleMessage;
         }
 
         private void Consumer_HandleMessage(object sender, CandleMessageHandlerEventArgs e)

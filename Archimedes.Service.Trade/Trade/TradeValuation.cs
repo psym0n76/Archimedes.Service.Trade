@@ -14,7 +14,7 @@ namespace Archimedes.Service.Trade.Strategies
         private readonly object _locker = new object();
         private readonly ICacheManager _cache;
         private readonly IHttpTradeRepository _tradeRepository;
-        private readonly BatchLog _batchLog = new BatchLog();
+        private readonly BatchLog _batchLog = new();
         private string _logId;
         private readonly ILogger<TradeValuation> _logger;
 
@@ -39,7 +39,8 @@ namespace Archimedes.Service.Trade.Strategies
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(_batchLog.Print(_logId, $"{e.Message} {e.StackTrace}"));
+                    _logger.LogError(_batchLog.Print(_logId,
+                        $"Error returned from TradeValuation Price Bid: {price.Bid} Ask: {price.Ask} {price.TimeStamp}", e));
                 }
             }
         }

@@ -29,16 +29,23 @@ namespace Archimedes.Service.Price
 
         private void Consumer_HandleMessage(object sender, PriceMessageHandlerEventArgs e)
         {
-            _logId = _batchLog.Start();
-            
-            _aggregator.Add(e.Prices);
-
-            if (_aggregator.SendPrice())
+            try
             {
-                AggregatePrice(sender, e);
-                _logger.LogInformation(_batchLog.Print(_logId));
+                _logId = _batchLog.Start();
+
+                _aggregator.Add(e.Prices);
+
+                if (_aggregator.SendPrice())
+                {
+                    AggregatePrice(sender, e);
+                    _logger.LogInformation(_batchLog.Print(_logId));
+                }
             }
-            
+            catch (Exception ex)
+            {
+                _logger.LogError(_batchLog.Print(_logId,
+                    $"Error returned from PriceSubscriber Price Bid {e.Prices[0].Bid} Ask: {e.Prices[0].Bid} {e.Prices[0].TimeStamp}", ex));
+            }
         }
 
         private void AggregatePrice(object sender, PriceMessageHandlerEventArgs e)

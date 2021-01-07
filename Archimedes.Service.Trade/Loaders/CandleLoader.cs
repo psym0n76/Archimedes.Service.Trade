@@ -28,7 +28,7 @@ namespace Archimedes.Service.Trade
             }
             catch (Exception a)
             {
-                _logger.LogError($"Error returned from Candle Repository {market} \n\nErrorMessage: {a.Message} \n\nStackTrace: {a.StackTrace}");
+                _logger.LogError($"Error returned from Candle Repository {market}", a);
                 return new List<CandleDto>();
             }
         }

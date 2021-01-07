@@ -27,7 +27,7 @@ namespace Archimedes.Service.Trade
             }
             catch (Exception a)
             {
-                _logger.LogError($"Error returned from PriceLevel Repository {market} \n\nErrorMessage: {a.Message} \nStackTrace: {a.StackTrace}");
+                _logger.LogError($"Error returned from PriceLevelLoader: {market} {granularity}", a);
                 return new List<PriceLevelDto>();
             }
         }

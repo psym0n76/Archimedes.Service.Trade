@@ -12,15 +12,12 @@ namespace Archimedes.Service.Trade.Strategies
 {
     public class PriceTradeExecutor : IPriceTradeExecutor
     {
-
         private readonly ILogger<PriceTradeExecutor> _logger;
-
         private readonly object _locker = new();
         private readonly ICacheManager _cache;
         private const string CacheName = "price-levels";
         private const string LastPriceCache = "price";
         private readonly IHttpPriceLevelRepository _priceLevel;
-
         private readonly BatchLog _batchLog = new();
         private string _logId;
 
@@ -36,8 +33,17 @@ namespace Archimedes.Service.Trade.Strategies
         {
             lock (_locker)
             {
-                _logId = _batchLog.Start();
-                Execute(price, tolerance);
+                try
+                {
+                    _logId = _batchLog.Start();
+                    Execute(price, tolerance);
+                    _logger.LogInformation(_batchLog.Print(_logId));
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(_batchLog.Print(_logId,
+                        $"Error returned from ExecuteLocked Price: {price} Tolerance: {tolerance}", e));
+                }
             }
         }
 
@@ -45,15 +51,12 @@ namespace Archimedes.Service.Trade.Strategies
         {
             if (await ValidateLastPrice(price))
             {
-                _batchLog.Update(_logId, $"Validating LastPrice Missing from Cache");
-                _logger.LogInformation(_batchLog.Print(_logId));
+                _batchLog.Update(_logId, $"Validating LastPrice Bid: {price.Bid} Ask: {price.Ask} Missing from Cache");
                 return;
             }
 
             await ValidatePriceAgainstPriceLevel(price, tolerance);
             await UpdateLastPriceCache(price);
-
-            _logger.LogInformation(_batchLog.Print(_logId));
         }
 
         private async Task<bool> ValidateLastPrice(PriceDto price)
@@ -68,7 +71,6 @@ namespace Archimedes.Service.Trade.Strategies
             await UpdateLastPriceCache(price);
 
             return true;
-
         }
 
         private async Task ValidatePriceAgainstPriceLevel(PriceDto price, decimal tolerance)
@@ -115,7 +117,7 @@ namespace Archimedes.Service.Trade.Strategies
         private async Task UpdatePriceLevelTable(PriceLevelDto priceLevel)
         {
             _batchLog.Update(_logId,
-                $"Update PriceLevel Table {priceLevel.Strategy} {priceLevel.TimeStamp}" );
+                $"Update PriceLevel Table {priceLevel.Strategy} {priceLevel.TimeStamp}");
             await _priceLevel.UpdatePriceLevel(priceLevel);
         }
 
@@ -131,7 +133,7 @@ namespace Archimedes.Service.Trade.Strategies
         {
             _batchLog.Update(_logId,
                 $"{priceLevel.Strategy.PadRight(13, ' ')}" + BidRangeFormat(priceLevel) +
-                $"Active: {priceLevel.Active} Broken: {priceLevel.LevelBroken, -6} {priceLevel.LevelBrokenDate} Outside: {priceLevel.OutsideRange,-6} Timestamp: {priceLevel.TimeStamp} ");
+                $"Active: {priceLevel.Active} Broken: {priceLevel.LevelBroken,-6} {priceLevel.LevelBrokenDate} Outside: {priceLevel.OutsideRange,-6} Timestamp: {priceLevel.TimeStamp} ");
         }
 
 
@@ -200,8 +202,6 @@ namespace Archimedes.Service.Trade.Strategies
                 $"PRICE LEVEL CROSSED - PRICE LEVEL CROSSED - PRICE LEVEL CROSSED - PRICE LEVEL CROSSED - PRICE LEVEL CROSSED - PRICE LEVEL CROSSED");
             _batchLog.Update(_logId,
                 $"=================================================================================================================================");
-
-            _batchLog.Update(_logId, $"Broken by Price and waiting for an Engulfing Candle");
         }
     }
 }

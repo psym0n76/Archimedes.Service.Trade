@@ -29,13 +29,12 @@ namespace Archimedes.Service.Trade
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
-
             services.AddDistributedMemoryCache();
             services.AddTransient<ICacheManager, CacheManager>();
 
             services.Configure<Config>(Configuration.GetSection("AppSettings"));
             services.AddSingleton(Configuration);
+            
             var config = Configuration.GetSection("AppSettings").Get<Config>();
 
             // replace this with model_runner queue names
@@ -47,7 +46,6 @@ namespace Archimedes.Service.Trade
 
             services.AddTransient<ICandleFanoutConsumer>(x =>
                 new CandleFanoutConsumer(config.RabbitHost, config.RabbitPort, "Archimedes_Candle_GBPUSD.5Min"));
-
 
             services.AddTransient<IProducer<TradeMessage>>(x =>
                 new Producer<TradeMessage>(config.RabbitHost, config.RabbitPort, config.RabbitExchange));
@@ -78,7 +76,6 @@ namespace Archimedes.Service.Trade
 
             services.AddTransient<ITradeProfileFactory, TradeProfileFactory>();
 
-
             services.AddAutoMapper(typeof(Startup));
             services.AddLogging();
 
@@ -93,7 +90,6 @@ namespace Archimedes.Service.Trade
             services.AddHttpClient<IHttpCandleRepository, HttpCandleRepository>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -112,8 +108,6 @@ namespace Archimedes.Service.Trade
             {
                 endpoints.MapControllers();
             });
-
-            //runner.Run("GBP/USD", "15Min", new CancellationToken());
         }
     }
 }
