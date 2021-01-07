@@ -7,7 +7,6 @@ using Archimedes.Library.Extensions;
 using Archimedes.Library.Message.Dto;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 
 namespace Archimedes.Service.Trade.Http
 {
@@ -34,11 +33,11 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorResponse = await response.Content.ReadAsAsync<PriceDto>();
+                var errorResponse = await response.Content.ReadAsAsync<string>();
 
                 if (response.RequestMessage != null)
                     _logger.LogError(
-                        $"GET Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
+                        $"GET Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
                 return new List<PriceDto>();
             }
 
@@ -53,16 +52,11 @@ namespace Archimedes.Service.Trade.Http
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorResponse = await response.Content.ReadAsAsync<PriceDto>();
-                var errMsg = JsonConvert.DeserializeObject<dynamic>(response.Content.ReadAsStringAsync().Result);
+                var errorResponse = await response.Content.ReadAsAsync<string>();
 
-                _logger.LogError($"ErrMsg: {errMsg} \n\nerrorResponse: {errorResponse}");
-                
-                
                 if (response.RequestMessage != null)
                     _logger.LogError(
-                        $"GET Failed: {response.ReasonPhrase}  {errorResponse} from {response.RequestMessage.RequestUri}");
-                
+                        $"GET Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
                 return new PriceDto();
             }
 
