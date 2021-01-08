@@ -11,5 +11,7 @@ namespace Archimedes.Service.Trade.Http
 
         Task<List<CandleDto>> GetCandlesByGranularityMarketByDate(string market, string granularity, DateTime startDate,
             DateTime endDate);
+
+        Task<DateTime> GetLastCandleUpdated(string market, string granularity);
     }
 }

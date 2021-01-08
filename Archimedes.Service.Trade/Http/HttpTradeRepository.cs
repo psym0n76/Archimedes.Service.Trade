@@ -60,5 +60,13 @@ namespace Archimedes.Service.Trade.Http
 
             _logger.LogInformation($"Updated Trade {trade.Strategy} {trade.BuySell} {trade.EntryPrice}");
         }
-     }
+
+        public async Task UpdateTrades(List<TradeDto> trades)
+        {
+            foreach (var trade in trades)
+            {
+                await UpdateTrade(trade);
+            }
+        }
+    }
 }

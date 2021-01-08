@@ -50,22 +50,23 @@ namespace Archimedes.Service.Trade.Strategies
         {
             var transactions = await _cache.GetAsync<List<TradeTransaction>>(TransactionCache);
 
-            // map a transaction to a trade
-
             foreach (var transaction in transactions)
             {
-                foreach (var priceTarget in transaction.ProfitTargets)
-                {
-                    
-                }
-            }
-            
-            var trade = new TradeDto()
-            {
-                //Id = transactions[0].
-            };
+                var trades = transaction.ProfitTargets.Select(profitTarget => new TradeDto()
+                    {
+                        Market = transaction.Market,
+                        BuySell = transaction.BuySell,
+                        EntryPrice = profitTarget.EntryPrice,
+                        TargetPrice = profitTarget.TargetPrice,
+                        ClosePrice = transaction.StopTargets.First().TargetPrice,
+                        Strategy = transaction.RiskRewardProfile,
+                        Success = false,
+                        Timestamp = DateTime.Now
+                    })
+                    .ToList();
 
-            await _tradeRepository.UpdateTrade(trade);
+                await _tradeRepository.UpdateTrades(trades);
+            }
         }
 
 

@@ -8,5 +8,6 @@ namespace Archimedes.Service.Trade.Http
     {
         Task AddTrades(List<TradeDto> trade);
         Task UpdateTrade(TradeDto trade);
+        Task UpdateTrades(List<TradeDto> trades);
     }
 }

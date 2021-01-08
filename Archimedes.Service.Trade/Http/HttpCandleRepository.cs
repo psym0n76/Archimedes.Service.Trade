@@ -40,5 +40,22 @@ namespace Archimedes.Service.Trade.Http
 
             return await response.Content.ReadAsAsync<List<CandleDto>>();
         }
+
+        public async Task<DateTime> GetLastCandleUpdated(string market, string granularity)
+        {
+            var response = await _client.GetAsync($"candle/bylastupdated?market={market}&granularity={granularity}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorResponse = await response.Content.ReadAsAsync<string>();
+
+                if (response.RequestMessage != null)
+                    _logger.LogError(
+                        $"GET Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
+                return new DateTime();
+            }
+
+            return await response.Content.ReadAsAsync<DateTime>();
+        }
     }
 }

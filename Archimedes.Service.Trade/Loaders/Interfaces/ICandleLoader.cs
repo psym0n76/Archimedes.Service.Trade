@@ -9,5 +9,7 @@ namespace Archimedes.Service.Trade
     {
         Task<List<CandleDto>> LoadAsync(string market, string granularity, DateTime startDate);
         Task<List<CandleDto>> LoadCandlesPreviousFiveAsync(string market, string granularity, DateTime messageStartDate);
+
+        Task ValidateRecentCandle(string market, string granularity, int retries);
     }
 }

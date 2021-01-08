@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Archimedes.Library.Logger;
 using Archimedes.Library.Message.Dto;
 using Archimedes.Service.Trade.Http;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,8 @@ namespace Archimedes.Service.Trade
 
         private readonly IHttpPriceRepository _lastPrice;
         private readonly ILogger<LastPriceLoader> _logger;
+        private readonly BatchLog _batchLog = new();
+        private string _logId;
 
         public LastPriceLoader(IHttpPriceRepository lastPrice, ILogger<LastPriceLoader> logger)
         {
@@ -22,11 +25,12 @@ namespace Archimedes.Service.Trade
         {
             try
             {
+                _logId = _batchLog.Start();
                 return await LoadLastPrice(market);
             }
             catch (Exception a)
             {
-                _logger.LogError($"Error returned from LastPriceLoader {market}",a);
+                _logger.LogError(_batchLog.Print(_logId, $"Error returned from LastPriceLoader {market}", a));
                 return new PriceDto();
             }
         }

@@ -31,7 +31,7 @@ namespace Archimedes.Service.Trade.Http
                 await UpdatePriceLevel(level);
             }
 
-            _logger.LogInformation($"Updated {levels.Count} PriceLevel(s)");
+            //_logger.LogInformation($"Updated {levels.Count} PriceLevel(s)");
         }
 
         public async Task UpdatePriceLevel(PriceLevelDto level)
@@ -50,7 +50,7 @@ namespace Archimedes.Service.Trade.Http
                 return;
             }
 
-            _logger.LogInformation($"Updated PriceLevel {level.Strategy} {level.BuySell} {level.TimeStamp}");
+            //_logger.LogInformation($"Updated PriceLevel {level.Strategy} {level.BuySell} {level.TimeStamp}");
         }
 
         public async Task<List<PriceLevelDto>> GetPriceLevelsByMarketByFromDate(string market, DateTime fromDate)

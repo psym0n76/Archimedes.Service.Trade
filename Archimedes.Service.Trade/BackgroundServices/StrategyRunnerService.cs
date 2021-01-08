@@ -10,6 +10,7 @@ namespace Archimedes.Service.Trade
 {
     public class StrategyRunnerService : BackgroundService
     {
+        private readonly ICandleLoader _candle;
         private readonly IStrategyRunner _strategyRunner;
         private readonly IBasicPriceStrategyHistoryUpdater _basicPriceStrategyHistoryUpdater;
         private readonly ILogger<StrategyRunnerService> _logger;
@@ -19,11 +20,12 @@ namespace Archimedes.Service.Trade
         private const string Granularity = "15Min";
         private const string EngulfGranularity = "5Min";
 
-        public StrategyRunnerService(IStrategyRunner strategyRunner, ILogger<StrategyRunnerService> logger, IBasicPriceStrategyHistoryUpdater basicPriceStrategyHistoryUpdater)
+        public StrategyRunnerService(IStrategyRunner strategyRunner, ILogger<StrategyRunnerService> logger, IBasicPriceStrategyHistoryUpdater basicPriceStrategyHistoryUpdater, ICandleLoader candle)
         {
             _strategyRunner = strategyRunner;
             _logger = logger;
             _basicPriceStrategyHistoryUpdater = basicPriceStrategyHistoryUpdater;
+            _candle = candle;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -34,6 +36,9 @@ namespace Archimedes.Service.Trade
             {
                 try
                 {
+                    _batchLog.Update(_logId, $"Validating Candles {Market} {Granularity}");
+                    _candle.ValidateRecentCandle(Market, Granularity,10);
+                    
                     _batchLog.Update(_logId, $"Running StrategyHistory {Market} {Granularity}");
                     _basicPriceStrategyHistoryUpdater.UpdateHistory(Market, Granularity);
 
@@ -42,7 +47,7 @@ namespace Archimedes.Service.Trade
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(_batchLog.Print(_logId, $"Unknown error found in StrategyRunnerService {e.Message} {e.StackTrace}"));
+                    _logger.LogError(_batchLog.Print(_logId, $"Unknown error found in StrategyRunnerService",e));
                 }
                 
             }, stoppingToken);
