@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,20 +56,28 @@ namespace Archimedes.Service.Price
 
             await _cache.SetAsync(PriceLevelCache, priceLevels);
             _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) added to Cache");
-
-            _logger.LogInformation((_batchLog.Print(_logId)));
         }
 
         private void PriceLevelSubscriber_PriceLevelMessageEventHandler(object sender,
             PriceLevelMessageHandlerEventArgs e)
         {
-            UpdateCache(e.PriceLevels);
+            try
+            {
+                _logId = _batchLog.Start();
+                UpdateCache(e.PriceLevels);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+                throw;
+            }
+
+            _logger.LogInformation(_batchLog.Print(_logId));
         }
 
 
         public async void UpdateCache(List<PriceLevelDto> priceLevel)
         {
-            _logId = _batchLog.Start();
             _batchLog.Update(_logId, $"PriceLevel Update {priceLevel[0].Strategy} {priceLevel[0].BidPrice} {priceLevel[0].BidPriceRange} {priceLevel[0].TimeStamp}");
 
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache);
