@@ -61,8 +61,8 @@ namespace Archimedes.Service.Trade
                     return;
                 }
 
-                _batchLog.Update(_logId,$"ValidateRecentCandle - waiting for Candle to update {market} {granularity} {lastCandle} - Retry {retry} from {retries} waiting 2secs");
-                Thread.Sleep(5000);
+                _batchLog.Update(_logId,$"ValidateRecentCandle - waiting for Candle to update {market} {granularity} {lastCandle} - Retry {retry} from {retries} waiting 5secs");
+                await Task.Delay(5000);
                 retry++;
             }
             
