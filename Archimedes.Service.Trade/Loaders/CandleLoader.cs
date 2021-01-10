@@ -66,7 +66,7 @@ namespace Archimedes.Service.Trade
                 retry++;
             }
             
-            _logger.LogError($"ValidateRecentCandle - Out of Date Candle {market} {granularity} {lastCandle}");
+            _logger.LogWarning(_batchLog.Print(_logId, $"ValidateRecentCandle - Out of Date Candle {market} {granularity} {lastCandle}"));
         }
 
 
