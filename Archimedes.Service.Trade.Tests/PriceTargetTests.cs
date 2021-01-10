@@ -1,4 +1,5 @@
-﻿using Archimedes.Library.Message.Dto;
+﻿using Archimedes.Library;
+using Archimedes.Library.Message.Dto;
 using NUnit.Framework;
 
 namespace Archimedes.Service.Trade.Tests
