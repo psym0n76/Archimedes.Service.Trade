@@ -51,12 +51,14 @@ namespace Archimedes.Service.Price
             {
                 _batchLog.Update(_logId, $"WARNING Missing PriceLevel(s)");
             }
+            else
+            {
+                _batchLog.Update(_logId, $"PriceLevel Range: {priceLevels.Min(a => a.TimeStamp)} to {priceLevels.Max(a => a.TimeStamp)}");
+                _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) returned from Table");
 
-            _batchLog.Update(_logId, $"PriceLevel Range: {priceLevels.Min(a => a.TimeStamp)} to {priceLevels.Max(a => a.TimeStamp)}");
-            _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) returned from Table");
-
-            await _cache.SetAsync(PriceLevelCache, priceLevels);
-            _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) added to Cache");
+                await _cache.SetAsync(PriceLevelCache, priceLevels);
+                _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) added to Cache");
+            }
         }
 
         private void PriceLevelSubscriber_PriceLevelMessageEventHandler(object sender,
