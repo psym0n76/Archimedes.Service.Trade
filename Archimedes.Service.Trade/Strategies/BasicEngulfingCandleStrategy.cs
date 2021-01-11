@@ -182,6 +182,12 @@ namespace Archimedes.Service.Trade.Strategies
 
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache);
 
+            if (!cachePriceLevels.Any())
+            {
+                _batchLog.Update(_logId, "No PriceLevel(s) returned from Cache - FAILED ValidateCandleClosedOutsideOfRange");
+                return;
+            }
+
             foreach (var level in cachePriceLevels.Where(WithinRangeAndActiveLevelBroken()))
             {
                 level.CandlesElapsedLevelBroken++;
@@ -196,6 +202,12 @@ namespace Archimedes.Service.Trade.Strategies
         private async Task ValidateCandleEngulf(Candle lastCandle)
         {
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache);
+
+            if (!cachePriceLevels.Any())
+            {
+                _batchLog.Update(_logId, "No PriceLevel(s) returned from Cache - FAILED ValidateCandleEngulf");
+                return;
+            }
 
             _batchLog.Update(_logId,
                 $"Identify Engulfing Candle across {cachePriceLevels.Count(WithinRangeAndActiveLevelBroken())} from {cachePriceLevels.Count}");
