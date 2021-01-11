@@ -34,7 +34,6 @@ namespace Archimedes.Service.Trade
         {
             _logId = _batchLog.Start();
 
-
             var tasks = new List<Task>
             {
                 Task.Run(() => { _priceLevelStrategy.Consume(market, granularity, token); }, token),
@@ -50,8 +49,8 @@ namespace Archimedes.Service.Trade
             }
             catch (Exception e)
             {
-                _logger.LogError(_batchLog.Print(_logId,
-                    $"Error from Task {e.Message} {e.InnerException} {e.StackTrace}"));
+                _logger.LogError(_batchLog.Print(_logId, $"Error returned from TaskRun", e));
+                return;
             }
 
             _logger.LogInformation(_batchLog.Print(_logId));

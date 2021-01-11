@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Archimedes.Library.Extensions;
 using Archimedes.Library.Logger;
@@ -15,7 +14,7 @@ namespace Archimedes.Service.Trade
     {
         private readonly IHttpCandleRepository _candle;
         private readonly ILogger<CandleLoader> _logger;
-        private readonly BatchLog _batchLog = new BatchLog();
+        private readonly BatchLog _batchLog = new();
         private string _logId;
 
         public CandleLoader(IHttpCandleRepository candle, ILogger<CandleLoader> logger)

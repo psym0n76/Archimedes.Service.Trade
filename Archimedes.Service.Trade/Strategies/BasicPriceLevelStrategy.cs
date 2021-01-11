@@ -52,6 +52,7 @@ namespace Archimedes.Service.Price
                 _batchLog.Update(_logId, $"WARNING Missing PriceLevel(s)");
             }
 
+            _batchLog.Update(_logId, $"PriceLevel Range: {priceLevels.Min(a => a.TimeStamp)} to {priceLevels.Max(a => a.TimeStamp)}");
             _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) returned from Table");
 
             await _cache.SetAsync(PriceLevelCache, priceLevels);
@@ -66,10 +67,10 @@ namespace Archimedes.Service.Price
                 _logId = _batchLog.Start();
                 UpdateCache(e.PriceLevels);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                Console.WriteLine(exception);
-                throw;
+                _logger.LogError(_batchLog.Print(_logId, $"Error returned from PriceLevelSubscriber_PriceLevelMessageEventHandler", ex));
+                return;
             }
 
             _logger.LogInformation(_batchLog.Print(_logId));

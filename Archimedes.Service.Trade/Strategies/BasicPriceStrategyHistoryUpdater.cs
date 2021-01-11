@@ -41,8 +41,7 @@ namespace Archimedes.Service.Trade.Strategies
 
             catch (Exception e)
             {
-                _batchLog.Update(_logId, $"Error {e.Message} {e.StackTrace}");
-                _logger.LogError(_batchLog.Print(_logId));
+                _logger.LogError(_batchLog.Print(_logId, $"Error returned from BasicPriceStrategyHistoryUpdater", e));
             }
         }
 
