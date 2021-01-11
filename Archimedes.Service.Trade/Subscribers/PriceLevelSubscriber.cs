@@ -23,7 +23,7 @@ namespace Archimedes.Service.Price
         private void Consumer_HandleMessage(object sender, PriceLevelMessageHandlerEventArgs e)
         {
             PriceLevelMessageEventHandler?.Invoke(sender, e);
-            //_logger.LogInformation($"Success {counter}");
+            _logger.LogInformation($"PriceLevelUpdate Success {e.Message.Granularity}");
         }
 
 

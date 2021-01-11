@@ -31,16 +31,16 @@ namespace Archimedes.Service.Price
             _priceLevel = priceLevel;
         }
 
-        public async void Consume(string market, string granularity, CancellationToken token)
+        public void Consume(string market, string granularity, CancellationToken token)
         {
             _logId = _batchLog.Start();
 
-            await InitialLoad(market, granularity);
+            InitialLoad(market, granularity).ConfigureAwait(false);
 
             _logger.LogInformation(_batchLog.Print(_logId));
 
             _priceLevelSubscriber.PriceLevelMessageEventHandler += PriceLevelSubscriber_PriceLevelMessageEventHandler;
-            await _priceLevelSubscriber.Consume(token);
+            _priceLevelSubscriber.Consume(token);
         }
 
         private async Task InitialLoad(string market, string granularity)
