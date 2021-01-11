@@ -152,7 +152,7 @@ namespace Archimedes.Service.Trade.Strategies
         {
             if (level.OutsideRange == false && level.LevelBroken)
             {
-                if (candle.BidHigh > level.BidPriceRange)
+                if (candle.BidClose > level.BidPriceRange)
                 {
                     level.OutsideRange = true;
                     level.OutsideRangeDate = candle.TimeStamp;
@@ -167,7 +167,7 @@ namespace Archimedes.Service.Trade.Strategies
         {
             if (level.OutsideRange == false && level.LevelBroken)
             {
-                if (candle.AskLow < level.AskPriceRange)
+                if (candle.AskClose < level.AskPriceRange)
                 {
                     level.OutsideRange = true;
                     level.OutsideRangeDate = candle.TimeStamp;
