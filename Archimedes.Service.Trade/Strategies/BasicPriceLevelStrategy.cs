@@ -79,23 +79,23 @@ namespace Archimedes.Service.Price
         }
 
 
-        public async void UpdateCache(List<PriceLevelDto> priceLevel)
+        public async void UpdateCache(List<PriceLevelDto> priceLevels)
         {
-            _batchLog.Update(_logId, $"PriceLevel Update {priceLevel[0].Strategy} {priceLevel[0].BidPrice} {priceLevel[0].BidPriceRange} {priceLevel[0].TimeStamp}");
+            _batchLog.Update(_logId, $"PriceLevel Update {priceLevels[0].Strategy} {priceLevels[0].BidPrice} {priceLevels[0].BidPriceRange} {priceLevels[0].TimeStamp}");
 
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache);
 
-            foreach (var cachePriceLevel in cachePriceLevels)
+            foreach (var priceLevel in priceLevels)
             {
-                if (cachePriceLevels.Any(a => a.TimeStamp == cachePriceLevel.TimeStamp))
+                if (cachePriceLevels.Any(a => a.TimeStamp == priceLevel.TimeStamp))
                 {
-                    _batchLog.Update(_logId, $"PriceLevel exists {cachePriceLevel.TimeStamp}");
+                    _batchLog.Update(_logId, $"PriceLevel exists {priceLevel.TimeStamp}");
                 }
                 else
                 {
-                    cachePriceLevels.Add(cachePriceLevel);
+                    cachePriceLevels.Add(priceLevel);
 
-                    _batchLog.Update(_logId, $"PriceLevel added to Cache {cachePriceLevel.TimeStamp}");
+                    _batchLog.Update(_logId, $"PriceLevel added to Cache {priceLevel.TimeStamp}");
                     await _cache.SetAsync(PriceLevelCache, cachePriceLevels);
                 }
             }
