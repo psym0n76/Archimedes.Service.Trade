@@ -30,8 +30,6 @@ namespace Archimedes.Service.Trade.Http
             {
                 await UpdatePriceLevel(level);
             }
-
-            //_logger.LogInformation($"Updated {levels.Count} PriceLevel(s)");
         }
 
         public async Task UpdatePriceLevel(PriceLevelDto level)
@@ -47,10 +45,8 @@ namespace Archimedes.Service.Trade.Http
                 if (response.RequestMessage != null)
                     _logger.LogError(
                         $"PUT Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
-                return;
             }
 
-            //_logger.LogInformation($"Updated PriceLevel {level.Strategy} {level.BuySell} {level.TimeStamp}");
         }
 
         public async Task<List<PriceLevelDto>> GetPriceLevelsByMarketByFromDate(string market, DateTime fromDate)

@@ -53,7 +53,8 @@ namespace Archimedes.Service.Price
             }
             else
             {
-                _batchLog.Update(_logId, $"PriceLevel Range: {priceLevels.Min(a => a.TimeStamp)} to {priceLevels.Max(a => a.TimeStamp)}");
+                _batchLog.Update(_logId,
+                    $"PriceLevel Range: {priceLevels.Min(a => a.TimeStamp)} to {priceLevels.Max(a => a.TimeStamp)}");
                 _batchLog.Update(_logId, $"{priceLevels.Count} PriceLevel(s) returned from Table");
 
                 await _cache.SetAsync(PriceLevelCache, priceLevels);
@@ -71,7 +72,8 @@ namespace Archimedes.Service.Price
             }
             catch (Exception ex)
             {
-                _logger.LogError(_batchLog.Print(_logId, $"Error returned from PriceLevelSubscriber_PriceLevelMessageEventHandler", ex));
+                _logger.LogError(_batchLog.Print(_logId,
+                    $"Error returned from PriceLevelSubscriber_PriceLevelMessageEventHandler", ex));
                 return;
             }
 
@@ -81,7 +83,8 @@ namespace Archimedes.Service.Price
 
         public async void UpdateCache(List<PriceLevelDto> priceLevels)
         {
-            _batchLog.Update(_logId, $"PriceLevel Update {priceLevels[0].Strategy} {priceLevels[0].BidPrice} {priceLevels[0].BidPriceRange} {priceLevels[0].TimeStamp}");
+            _batchLog.Update(_logId,
+                $"PriceLevel Update {priceLevels[0].Strategy} {priceLevels[0].BidPrice} {priceLevels[0].BidPriceRange} {priceLevels[0].TimeStamp}");
 
             var cachePriceLevels = await _cache.GetAsync<List<PriceLevelDto>>(PriceLevelCache);
 
