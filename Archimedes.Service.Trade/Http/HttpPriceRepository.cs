@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Archimedes.Library.Domain;
 using Archimedes.Library.Extensions;
+using Archimedes.Library.Logger;
 using Archimedes.Library.Message.Dto;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,6 +16,8 @@ namespace Archimedes.Service.Trade.Http
     {
         private readonly ILogger<HttpPriceRepository> _logger;
         private readonly HttpClient _client;
+        private readonly BatchLog _batchLog = new();
+        private string _logId;
 
         public HttpPriceRepository(IOptions<Config> config, ILogger<HttpPriceRepository> logger, HttpClient client)
         {
@@ -25,6 +29,9 @@ namespace Archimedes.Service.Trade.Http
 
         public async Task<List<PriceDto>> GetPricesByMarketByFromDate(string market, string granularity, DateTime fromDate)
         {
+            _logId = _batchLog.Start();
+            _batchLog.Update(_logId, $"GET {nameof(GetPricesByMarketByFromDate)} {market} {granularity} {fromDate}");
+
             var response =
                 await _client.GetAsync(
                     $"price/byMarket_byFromdate?market={market}&granularity={granularity}&fromDate={fromDate}");
@@ -33,17 +40,27 @@ namespace Archimedes.Service.Trade.Http
             {
                 var errorResponse = await response.Content.ReadAsAsync<string>();
 
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning(_batchLog.Print(_logId, $"GET FAILED: {errorResponse}"));
+                    return new List<PriceDto>();
+                }
+
                 if (response.RequestMessage != null)
-                    _logger.LogError(
-                        $"GET Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
+                    _logger.LogError(_batchLog.Print(_logId, $"GET FAILED: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}"));
                 return new List<PriceDto>();
             }
 
-            return await response.Content.ReadAsAsync<List<PriceDto>>();
+            var prices = await response.Content.ReadAsAsync<List<PriceDto>>();
+            _logger.LogInformation(_batchLog.Print(_logId, $"Returned {prices.Count} Price(s)"));
+            return prices;
         }
 
         public async Task<PriceDto> GetLastPriceByMarket(string market)
         {
+            _logId = _batchLog.Start();
+            _batchLog.Update(_logId, $"GET {nameof(GetPricesByMarketByFromDate)} {market}");
+            
             var response =
                 await _client.GetAsync(
                     $"price/byLastPrice_byMarket?market={market}");
@@ -52,13 +69,21 @@ namespace Archimedes.Service.Trade.Http
             {
                 var errorResponse = await response.Content.ReadAsAsync<string>();
 
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning(_batchLog.Print(_logId, $"GET FAILED: {errorResponse}"));
+                    return new PriceDto();
+                }
+
                 if (response.RequestMessage != null)
                     _logger.LogError(
-                        $"GET Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
+                        $"GET FAILED: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
                 return new PriceDto();
             }
 
-            return await response.Content.ReadAsAsync<PriceDto>();
+            var price = await response.Content.ReadAsAsync<PriceDto>();
+            _logger.LogInformation(_batchLog.Print(_logId, $"Returned {price.Bid} {price.Ask} {price.TimeStamp} Price(s)"));
+            return price;
         }
     }
 }

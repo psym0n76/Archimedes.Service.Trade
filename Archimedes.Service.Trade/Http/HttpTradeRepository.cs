@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Archimedes.Library.Domain;
 using Archimedes.Library.Extensions;
+using Archimedes.Library.Logger;
 using Archimedes.Library.Message.Dto;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,6 +16,8 @@ namespace Archimedes.Service.Trade.Http
     {
         private readonly ILogger<HttpTradeRepository> _logger;
         private readonly HttpClient _client;
+        private readonly BatchLog _batchLog = new();
+        private string _logId;
 
         public HttpTradeRepository(IOptions<Config> config, ILogger<HttpTradeRepository> logger, HttpClient client)
         {
@@ -25,6 +29,9 @@ namespace Archimedes.Service.Trade.Http
 
         public async Task AddTrades(List<TradeDto> trade)
         {
+            _logId = _batchLog.Start();
+            _batchLog.Update(_logId, $"POST {nameof(AddTrades)}");
+            
             var payload = new JsonContent(trade);
 
             var response = await _client.PostAsync("trade", payload);
@@ -34,16 +41,19 @@ namespace Archimedes.Service.Trade.Http
                 var errorResponse = await response.Content.ReadAsAsync<string>();
 
                 if (response.RequestMessage != null)
-                    _logger.LogError(
-                        $"GET Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
+                    _logger.LogError(_batchLog.Print(_logId, $"GET FAILED: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}"));
                 return;
             }
 
-            _logger.LogInformation($"Added Trade {trade[0].Strategy} {trade[0].BuySell} {trade[0].TargetPrice}");
+            //todo return id
+            _logger.LogInformation(_batchLog.Print(_logId,$"ADDED Trade"));
         }
 
         public async Task UpdateTrade(TradeDto trade)
         {
+            _logId = _batchLog.Start();
+            _batchLog.Update(_logId, $"PUT {nameof(UpdateTrade)} {trade.Strategy} {trade.BuySell} {trade.PriceLevelTimestamp}");
+            
             var payload = new JsonContent(trade);
 
             var response = await _client.PutAsync("trade", payload);
@@ -52,13 +62,18 @@ namespace Archimedes.Service.Trade.Http
             {
                 var errorResponse = await response.Content.ReadAsAsync<string>();
 
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning(_batchLog.Print(_logId, $"POST FAILED: {errorResponse}"));
+                    return;
+                }
+
                 if (response.RequestMessage != null)
-                    _logger.LogError(
-                        $"PUT Failed: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}");
+                    _logger.LogError(_batchLog.Print(_logId, $"PUT FAILED: {response.ReasonPhrase}  \n\n{errorResponse} \n\n{response.RequestMessage.RequestUri}"));
                 return;
             }
 
-            _logger.LogInformation($"Updated Trade {trade.Strategy} {trade.BuySell} {trade.EntryPrice}");
+            _logger.LogInformation(_batchLog.Print(_logId, $"UPDATED Trade"));
         }
 
         public async Task UpdateTrades(List<TradeDto> trades)
