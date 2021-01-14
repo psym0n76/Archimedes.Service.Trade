@@ -57,9 +57,9 @@ namespace Archimedes.Service.Trade.Tests
             mockCache.Setup(x => x.GetAsync<PriceDto>("price"))
                 .ReturnsAsync(lastPrice);
 
+            var mockPublisher = new Mock<IPriceTradePublisher>();
 
-
-            var subject = new PriceTradeExecutor(mockLogger.Object, mockHttpClient.Object,mockCache.Object);
+            var subject = new PriceTradeExecutor(mockLogger.Object,mockCache.Object, mockPublisher.Object);
 
             var price = new PriceDto() {Ask = 1.2999m, Bid = 1.2001m};
 

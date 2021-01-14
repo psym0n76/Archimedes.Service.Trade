@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Archimedes.Library.Logger;
 using Archimedes.Library.Message.Dto;
-using Archimedes.Service.Trade.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Archimedes.Service.Trade.Strategies
@@ -17,16 +16,15 @@ namespace Archimedes.Service.Trade.Strategies
         private readonly ICacheManager _cache;
         private const string CacheName = "price-levels";
         private const string LastPriceCache = "price";
-        private readonly IHttpPriceLevelRepository _priceLevel;
+        private readonly IPriceTradePublisher _publisher;
         private readonly BatchLog _batchLog = new();
         private string _logId;
 
-        public PriceTradeExecutor(ILogger<PriceTradeExecutor> logger, IHttpPriceLevelRepository priceLevel,
-            ICacheManager cache)
+        public PriceTradeExecutor(ILogger<PriceTradeExecutor> logger, ICacheManager cache, IPriceTradePublisher publisher)
         {
             _logger = logger;
-            _priceLevel = priceLevel;
             _cache = cache;
+            _publisher = publisher;
         }
 
         public void ExecuteLocked(PriceDto price, decimal tolerance)
@@ -56,7 +54,8 @@ namespace Archimedes.Service.Trade.Strategies
             }
 
             await ValidatePriceAgainstPriceLevel(price, tolerance);
-            await UpdateLastPriceCache(price);
+
+            await _publisher.UpdateLastPriceCache(price);
         }
 
         private async Task<bool> ValidateLastPrice(PriceDto price)
@@ -68,7 +67,7 @@ namespace Archimedes.Service.Trade.Strategies
 
             if (lastPrice.Ask != 0 && lastPrice.Bid != 0) return false;
 
-            await UpdateLastPriceCache(price);
+            await _publisher.UpdateLastPriceCache(price);
 
             return true;
         }
@@ -91,9 +90,7 @@ namespace Archimedes.Service.Trade.Strategies
                 {
                     if (!ValidateLastPriceCrossingBuyLevel(price, lastPrice.Ask, priceLevel, tolerance)) continue;
 
-                    RaiseTradeEvent(priceLevel);
-                    await UpdatePriceLevelCache(cachePriceLevels, priceLevel);
-                    await UpdatePriceLevelTable(priceLevel);
+                    await _publisher.UpdateSubscribers(priceLevel);
                     break;
                 }
 
@@ -101,26 +98,23 @@ namespace Archimedes.Service.Trade.Strategies
                 {
                     if (!ValidateLastPriceCrossingSellLevel(price, lastPrice.Bid, priceLevel, tolerance)) continue;
 
-                    RaiseTradeEvent(priceLevel);
-                    await UpdatePriceLevelCache(cachePriceLevels, priceLevel);
-                    await UpdatePriceLevelTable(priceLevel);
+                    await _publisher.UpdateSubscribers(priceLevel);
                     break;
                 }
             }
+
+            await _publisher.UpdatePriceLevelCache(cachePriceLevels);
         }
+
 
         private static Func<PriceLevelDto, bool> WithinRangeAndActiveLevelUnbroken()
         {
             return level => level.OutsideRange == false && level.Active && level.LevelBroken == false;
         }
 
-        private async Task UpdatePriceLevelTable(PriceLevelDto priceLevel)
-        {
-            _batchLog.Update(_logId,
-                $"Update PriceLevel Table {priceLevel.Strategy} {priceLevel.TimeStamp}");
-            await _priceLevel.UpdatePriceLevel(priceLevel);
-        }
 
+
+        //todo extension method or class
         private void PrintPriceLevels(List<PriceLevelDto> priceLevels)
         {
             foreach (var priceLevel in priceLevels.Where(level => level.OutsideRange == false && level.Active))
@@ -136,12 +130,11 @@ namespace Archimedes.Service.Trade.Strategies
                 $"Active: {priceLevel.Active} Broken: {priceLevel.LevelBroken,-6} {priceLevel.LevelBrokenDate} Outside: {priceLevel.OutsideRange,-6} Timestamp: {priceLevel.TimeStamp} ");
         }
 
-
         private static string BidRangeFormat(PriceLevelDto priceLevel)
         {
             string result;
 
-            if (priceLevel.Strategy.Contains("HIGH"))
+            if (priceLevel.BuySell == "SELL")
             {
                 result = $"Bid: {priceLevel.BidPrice.ToString(CultureInfo.InvariantCulture)?.PadRight(7, ' ')} " +
                          $"Range: {priceLevel.BidPriceRange.ToString(CultureInfo.InvariantCulture)?.PadRight(7, ' ')} ";
@@ -156,19 +149,7 @@ namespace Archimedes.Service.Trade.Strategies
             return result;
         }
 
-        private async Task UpdatePriceLevelCache(List<PriceLevelDto> cachePriceLevels, PriceLevelDto priceLevel)
-        {
-            _batchLog.Update(_logId, $"Updating PriceLevel to Cache");
-            PriceLevelLog(priceLevel);
-            await _cache.SetAsync(CacheName, cachePriceLevels);
-        }
 
-        private async Task UpdateLastPriceCache(PriceDto price)
-        {
-            _batchLog.Update(_logId, $"Updated LastPrice to Cache ");
-            await _cache.SetAsync(LastPriceCache,
-                new PriceDto() {Ask = price.Ask, Bid = price.Bid, TimeStamp = price.TimeStamp});
-        }
 
         public bool ValidateLastPriceCrossingSellLevel(PriceDto price, decimal lastBidPrice, PriceLevelDto priceLevel,
             decimal tolerance)
@@ -188,20 +169,6 @@ namespace Archimedes.Service.Trade.Strategies
             _batchLog.Update(_logId,
                 $"AskPrice {price.Ask} - {tolerance} has crossed BUY PriceLevel {priceLevel.AskPrice} {priceLevel.TimeStamp}");
             return true;
-        }
-
-        private void RaiseTradeEvent(PriceLevelDto priceLevel)
-        {
-            priceLevel.LevelBrokenDate = DateTime.Now;
-            priceLevel.LevelsBroken++;
-            priceLevel.LevelBroken = true;
-
-            _batchLog.Update(_logId,
-                $"=================================================================================================================================");
-            _batchLog.Update(_logId,
-                $"PRICE LEVEL CROSSED - PRICE LEVEL CROSSED - PRICE LEVEL CROSSED - PRICE LEVEL CROSSED - PRICE LEVEL CROSSED - PRICE LEVEL CROSSED");
-            _batchLog.Update(_logId,
-                $"=================================================================================================================================");
         }
     }
 }

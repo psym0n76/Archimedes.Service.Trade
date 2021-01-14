@@ -6,6 +6,7 @@ using Archimedes.Library.Price;
 using Archimedes.Library.RabbitMq;
 using Archimedes.Service.Price;
 using Archimedes.Service.Trade.Http;
+using Archimedes.Service.Trade.Hubs;
 using Archimedes.Service.Trade.Strategies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -34,6 +35,7 @@ namespace Archimedes.Service.Trade
 
             services.Configure<Config>(Configuration.GetSection("AppSettings"));
             services.AddSingleton(Configuration);
+            services.AddSignalR();
             
             var config = Configuration.GetSection("AppSettings").Get<Config>();
 
@@ -72,6 +74,7 @@ namespace Archimedes.Service.Trade
 
             services.AddTransient<ITradeValuation, TradeValuation>();
             services.AddTransient<IPriceTradeExecutor, PriceTradeExecutor>();
+            services.AddTransient<IPriceTradePublisher, PriceTradePublisher>();
             services.AddTransient<ITradeGenerator, TradeGenerator>();
 
             services.AddTransient<ITradeProfileFactory, TradeProfileFactory>();
@@ -107,6 +110,7 @@ namespace Archimedes.Service.Trade
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<PriceLevelHub>("/hubs/price-level");
             });
         }
     }
