@@ -34,7 +34,7 @@ namespace Archimedes.Service.Trade
 
         private async Task<List<PriceLevelDto>> LoadPriceLevels(string market, string granularity)
         {
-            var priceLevels = await _priceLevel.GetPriceLevelCurrentAndPreviousDay(market, granularity);
+            var priceLevels = await _priceLevel.GetPriceLevelsByCurrentAndPreviousDay(market, granularity);
 
             if (!priceLevels.Any())
             {

@@ -84,22 +84,20 @@ namespace Archimedes.Service.Trade.Http
             return priceLevels;
         }
 
-        public async Task<List<PriceLevelDto>> GetPriceLevelCurrentAndPreviousDay(string market, string granularity)
-        {
-            return await GetPriceLevelsByMarketByGranularityByFromDate(market, granularity,
-                DateTime.Today.PreviousWorkDay().AddDays(-1));
-        }
+        //public async Task<List<PriceLevelDto>> GetPriceLevelCurrentAndPreviousDay(string market, string granularity)
+        //{
+        //    return await GetPriceLevelsByMarketByGranularityByFromDate(market, granularity,
+        //        DateTime.Today.PreviousWorkDay().AddDays(-1));
+        //}
         
-        public async Task<List<PriceLevelDto>> GetPriceLevelsByMarketByGranularityByFromDate(string market,
-            string granularity, DateTime fromDate)
+        public async Task<List<PriceLevelDto>> GetPriceLevelsByCurrentAndPreviousDay(string market, string granularity)
         {
-            
             _logId = _batchLog.Start();
-            _batchLog.Update(_logId, $"GET {nameof(GetPriceLevelsByMarketByGranularityByFromDate)} {market} {granularity} {fromDate}");
+            _batchLog.Update(_logId, $"GET {nameof(GetPriceLevelsByCurrentAndPreviousDay)} {market} {granularity}");
 
             var response =
                 await _client.GetAsync(
-                    $"price-level/byMarket_byGranularity_byFromdate?market={market}&granularity={granularity}&fromDate={fromDate:yyyy-MM-dd}");
+                    $"price-level/byMarket_byGranularity_byCurrentDay?market={market}&granularity={granularity}");
 
             if (!response.IsSuccessStatusCode)
             {
