@@ -19,7 +19,7 @@ namespace Archimedes.Service.Trade.Strategies
         private readonly IHttpPriceLevelRepository _priceLevel;
         private readonly IHubContext<PriceLevelHub> _priceLevelHub;
         private readonly ICacheManager _cache;
-        private const string CacheName = "price-levels";
+        private const string PriceLevelCache = "price-levels";
         private const string LastPriceCache = "price";
 
         public PriceTradePublisher(IHttpPriceLevelRepository priceLevel, IHubContext<PriceLevelHub> priceLevelHub, ICacheManager cache, ILogger<PriceTradePublisher> logger)
@@ -57,13 +57,11 @@ namespace Archimedes.Service.Trade.Strategies
 
         public async Task UpdatePriceLevelCache(List<PriceLevelDto> cachePriceLevels)
         {
-            _batchLog.Update(_logId, $"Updating PriceLevel to Cache");
-            await _cache.SetAsync(CacheName, cachePriceLevels);
+            await _cache.SetAsync(PriceLevelCache, cachePriceLevels);
         }
 
         public async Task UpdateLastPriceCache(PriceDto price)
         {
-            _batchLog.Update(_logId, $"Updated LastPrice to Cache ");
             await _cache.SetAsync(LastPriceCache,
                 new PriceDto() { Ask = price.Ask, Bid = price.Bid, TimeStamp = price.TimeStamp });
         }
