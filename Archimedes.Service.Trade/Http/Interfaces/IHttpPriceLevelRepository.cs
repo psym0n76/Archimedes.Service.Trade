@@ -10,9 +10,9 @@ namespace Archimedes.Service.Trade.Http
         Task UpdatePriceLevel(PriceLevelDto level);
 
         Task<List<PriceLevelDto>> GetPriceLevelsByMarketByFromDate(string market, DateTime fromDate);
+        
         Task<List<PriceLevelDto>> GetPriceLevelsByCurrentAndPreviousDay(string market, string granularity);
-
-        //Task<List<PriceLevelDto>> GetPriceLevelCurrentAndPreviousDay(string market,string granularity);
+        
         Task UpdatePriceLevels(List<PriceLevelDto> levels);
     }
 }

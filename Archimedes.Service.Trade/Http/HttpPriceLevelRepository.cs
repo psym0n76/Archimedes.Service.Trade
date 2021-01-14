@@ -84,12 +84,6 @@ namespace Archimedes.Service.Trade.Http
             return priceLevels;
         }
 
-        //public async Task<List<PriceLevelDto>> GetPriceLevelCurrentAndPreviousDay(string market, string granularity)
-        //{
-        //    return await GetPriceLevelsByMarketByGranularityByFromDate(market, granularity,
-        //        DateTime.Today.PreviousWorkDay().AddDays(-1));
-        //}
-        
         public async Task<List<PriceLevelDto>> GetPriceLevelsByCurrentAndPreviousDay(string market, string granularity)
         {
             _logId = _batchLog.Start();
