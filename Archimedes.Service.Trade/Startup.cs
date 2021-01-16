@@ -111,6 +111,7 @@ namespace Archimedes.Service.Trade
             {
                 endpoints.MapControllers();
                 endpoints.MapHub<PriceLevelHub>("/hubs/price-level");
+                endpoints.MapHub<TradeHub>("/hubs/trade");
             });
         }
     }

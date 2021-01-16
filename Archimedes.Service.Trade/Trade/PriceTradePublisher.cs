@@ -18,9 +18,12 @@ namespace Archimedes.Service.Trade.Strategies
         private readonly ILogger<PriceTradePublisher> _logger;
         private readonly IHttpPriceLevelRepository _priceLevel;
         private readonly IHubContext<PriceLevelHub> _priceLevelHub;
+
+        
         private readonly ICacheManager _cache;
         private const string PriceLevelCache = "price-levels";
         private const string LastPriceCache = "price";
+
 
         public PriceTradePublisher(IHttpPriceLevelRepository priceLevel, IHubContext<PriceLevelHub> priceLevelHub, ICacheManager cache, ILogger<PriceTradePublisher> logger)
         {
